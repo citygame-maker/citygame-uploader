@@ -198,8 +198,9 @@
         </div>
 
         <div class="btn-row">
-          <button type="button" @click="checkPassword">
-            Unlock
+          <button type="button" @click="checkPassword" :disabled="authLoading">
+            <span v-if="authLoading">Checking…</span>
+            <span v-else>Unlock</span>
           </button>
           <div v-if="authError" class="auth-error">
             {{ authError }}
@@ -271,11 +272,9 @@
   <script>
     const { createApp, ref, computed } = Vue;
 
-    // 🔐 Shared password – change this if needed
-    const sharedPassword = "password123";
-
-    // 🔗 Your n8n webhook endpoint
-    const webhookUrlConst = "https://citygame.app.n8n.cloud/webhook/game-upload";
+    // 🔗 Your n8n endpoints
+    const webhookUrlConst      = "https://citygame.app.n8n.cloud/webhook/game-upload";
+    const passwordCheckUrlConst = "https://citygame.app.n8n.cloud/webhook/validate-pass";
 
     createApp({
       setup() {
@@ -283,6 +282,7 @@
         const isAuthed = ref(false);
         const passwordInput = ref("");
         const authError = ref("");
+        const authLoading = ref(false);
 
         // Form state
         const webhookUrl = ref(webhookUrlConst);
@@ -298,18 +298,45 @@
           return title.value && gameCode.value && configYaml.value;
         });
 
-        function checkPassword() {
+        // ✅ Password validation via n8n (returns "1" or "0" in body)
+        async function checkPassword() {
+          authError.value = "";
+
           if (!passwordInput.value) {
             authError.value = "Please enter the password.";
             return;
           }
 
-          if (passwordInput.value === sharedPassword) {
-            isAuthed.value = true;
-            authError.value = "";
-            passwordInput.value = "";
-          } else {
-            authError.value = "Incorrect password.";
+          authLoading.value = true;
+
+          try {
+            const res = await fetch(passwordCheckUrlConst, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json"
+              },
+              body: JSON.stringify({ password: passwordInput.value })
+            });
+
+            const text = await res.text();
+            if (!res.ok) {
+              throw new Error("n8n returned " + res.status + " (" + text + ")");
+            }
+
+            const trimmed = (text || "").trim();
+
+            if (trimmed === "1") {
+              isAuthed.value = true;
+              authError.value = "";
+              passwordInput.value = "";
+            } else {
+              authError.value = "Incorrect password.";
+            }
+          } catch (err) {
+            console.error(err);
+            authError.value = "Error contacting password server. Try again.";
+          } finally {
+            authLoading.value = false;
           }
         }
 
@@ -372,6 +399,7 @@
           isAuthed,
           passwordInput,
           authError,
+          authLoading,
           checkPassword,
 
           // form
