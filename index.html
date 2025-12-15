@@ -15,9 +15,18 @@
     body {
       margin: 0;
       padding: 0;
-      background: #0f172a;
+      background:
+        linear-gradient(
+          rgba(2, 6, 23, 0.78),
+          rgba(2, 6, 23, 0.78)
+        ),
+        url("https://trello-backgrounds.s3.amazonaws.com/66d6bb87a0b30e32c038c240/1920x1080/82cebc0c014226d323d253376e883cb3/Workshop_Phase_3_%282%29.webp");
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
       color: #e5e7eb;
     }
+
 
     .full-screen-center {
       min-height: 100vh;
@@ -108,14 +117,23 @@
       padding: 8px 16px;
       font-size: 0.9rem;
       cursor: pointer;
-      background: linear-gradient(135deg, #22c55e, #16a34a);
+      /* background: linear-gradient(135deg, #22c55e, #16a34a); */
       color: white;
       font-weight: 500;
       display: inline-flex;
       align-items: center;
       gap: 6px;
       white-space: nowrap;
+      background: linear-gradient(135deg, #2dd4bf, #14b8a6);
     }
+    input[type="text"]:focus,
+      input[type="password"]:focus,
+      textarea:focus {
+        outline: none;
+        border-color: #2dd4bf;
+        box-shadow: 0 0 0 1px rgba(45, 212, 191, 0.35);
+      }
+
 
     button:disabled {
       opacity: 0.5;
@@ -132,7 +150,7 @@
     }
 
     .status.success {
-      color: #4ade80;
+      color: #2dd4bf;
     }
 
     .tag {
@@ -273,7 +291,7 @@
     const { createApp, ref, computed } = Vue;
 
     // 🔗 Your n8n endpoints
-    const webhookUrlConst      = "https://citygame.app.n8n.cloud/webhook/game-upload";
+    const webhookUrlConst      = "https://citygame.app.n8n.cloud/webhook-test/game-upload";
     const passwordCheckUrlConst = "https://citygame.app.n8n.cloud/webhook/validate-pass";
 
     createApp({
