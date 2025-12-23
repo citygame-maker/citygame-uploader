@@ -614,7 +614,7 @@ sequences:
 
           <div class="field">
             <label for="wpEventId"><i class="fab fa-wordpress"></i> WordPress Event ID</label>
-            <input id="wpEventId" type="text" v-model.trim="wordpressEventId" placeholder="e.g. 12345" />
+            <input disabled id="wpEventId" type="text" v-model.trim="wordpressEventId" placeholder="e.g. 12345 (disabled)" />
           </div>
 
           <div class="field">
@@ -666,8 +666,8 @@ sequences:
     const { createApp, ref, computed } = Vue;
 
     // 🔗 Your n8n endpoints
-    const webhookUrlConst        = "https://citygame.app.n8n.cloud/webhook-test/game-upload";
-    const migrateWebhookUrlConst = "https://citygame.app.n8n.cloud/webhook-test/migrate";
+    const webhookUrlConst        = "https://citygame.app.n8n.cloud/webhook/game-upload";
+    const migrateWebhookUrlConst = "https://citygame.app.n8n.cloud/webhook/migrate";
     const passwordCheckUrlConst  = "https://citygame.app.n8n.cloud/webhook/validate-pass";
 
     createApp({
@@ -716,7 +716,7 @@ sequences:
           return (
             hasConfig &&
             hasAtLeastOneUrl &&
-            !!wordpressEventId.value &&
+            // !!wordpressEventId.value &&
             !!bokunId.value &&
             !!gameConcept.value
           );
