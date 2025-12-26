@@ -500,8 +500,8 @@
 
           <div class="tag-container" v-else>
             <div class="tag"><i class="fas fa-code"></i> config.yml</div>
-            <div class="tag"><i class="fas fa-images"></i> SharePoint Images URL</div>
-            <div class="tag"><i class="fas fa-wordpress"></i> WordPress Event ID</div>
+            <!-- <div class="tag"><i class="fas fa-images"></i> SharePoint Images URL</div>
+            <div class="tag"><i class="fas fa-wordpress"></i> WordPress Event ID</div> -->
             <div class="tag"><i class="fas fa-ticket"></i> Bokun ID</div>
             <div class="tag"><i class="fas fa-lightbulb"></i> Game Concept</div>
           </div>
@@ -525,8 +525,8 @@
           </div>
 
           <div class="field">
-            <label for="configYaml"><i class="fas fa-cog"></i> config.yml Content</label>
-            <textarea
+            <label for="configYaml"><i class="fas fa-cog"></i> config.yml Content<span style="color: #ef4444;">*</span></label>
+            <textarea required
               id="configYaml"
               v-model="configYaml"
               placeholder="# Paste your Kokimoki config.yml here
@@ -537,8 +537,8 @@ sequences:
           </div>
 
           <div class="field">
-            <label for="gameCode"><i class="fas fa-code"></i> Game Code</label>
-            <textarea
+            <label for="gameCode"><i class="fas fa-code"></i> Game Code<span style="color: #ef4444;">*</span></label>
+            <textarea required
               id="gameCode"
               v-model="gameCode"
               placeholder="// Paste your game code from Apps > latest code
@@ -571,11 +571,11 @@ sequences:
         <!-- MIGRATE FORM -->
         <form v-else @submit.prevent="handleMigrate">
           <div class="field">
-            <label for="mConfigYaml"><i class="fas fa-cog"></i> config.yml Content</label>
-            <textarea id="mConfigYaml" v-model="migrateConfigYaml" placeholder="# Paste your Kokimoki config.yml here"></textarea>
+            <label for="mConfigYaml"><i class="fas fa-cog"></i> config.yml Content<span style="color: #ef4444;">*</span></label>
+            <textarea required id="mConfigYaml" v-model="migrateConfigYaml" placeholder="# Paste your Kokimoki config.yml here"></textarea>
           </div>
 
-          <div class="field">
+          <!-- <div class="field">
             <label><i class="fas fa-images"></i> SharePoint Images URLs</label>
 
             <div v-for="(url, idx) in sharepointImagesUrls" :key="idx" style="display:flex; gap:10px; margin-bottom:10px;">
@@ -610,21 +610,21 @@ sequences:
             <div style="margin-top:8px; color: var(--text-muted); font-size: 0.85rem;">
               <i class="fas fa-info-circle"></i> These will be sent to n8n as an array.
             </div>
-          </div>
+          </div> -->
 
-          <div class="field">
+          <!-- <div class="field">
             <label for="wpEventId"><i class="fab fa-wordpress"></i> WordPress Event ID</label>
             <input disabled id="wpEventId" type="text" v-model.trim="wordpressEventId" placeholder="e.g. 12345 (disabled)" />
+          </div> -->
+
+          <div class="field">
+            <label for="bokunId"><i class="fas fa-ticket"></i> Bokun ID<span style="color: #ef4444;">*</span></label>
+            <input required id="bokunId" type="text" v-model.trim="bokunId" placeholder="e.g. 67890" />
           </div>
 
           <div class="field">
-            <label for="bokunId"><i class="fas fa-ticket"></i> Bokun ID</label>
-            <input id="bokunId" type="text" v-model.trim="bokunId" placeholder="e.g. 67890" />
-          </div>
-
-          <div class="field">
-            <label for="concept"><i class="fas fa-lightbulb"></i> Game Concept</label>
-            <select id="concept" v-model="gameConcept">
+            <label for="concept"><i class="fas fa-lightbulb"></i> Game Concept<span style="color: #ef4444;">*</span></label>
+            <select required id="concept" v-model="gameConcept">
               <option :value="36">Secrets</option>
               <option value="Sherlock" disabled>Sherlock (disabled)</option>
             </select>
@@ -715,7 +715,7 @@ sequences:
 
           return (
             hasConfig &&
-            hasAtLeastOneUrl &&
+            // hasAtLeastOneUrl &&
             // !!wordpressEventId.value &&
             !!bokunId.value &&
             !!gameConcept.value
