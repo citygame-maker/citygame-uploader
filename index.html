@@ -38,6 +38,8 @@
       --radius-md: 12px;
       --radius-sm: 8px;
       --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      --test-mode: #f59e0b;
+      --prod-mode: #10b981;
     }
 
     body {
@@ -393,12 +395,103 @@
       box-shadow: 0 6px 18px rgba(14,165,233,0.18);
     }
 
+    /* Mode Toggle Styles */
+    .mode-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      margin-bottom: 20px;
+      gap: 10px;
+    }
+
+    .mode-toggle-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+
+    .mode-toggle-switch {
+      position: relative;
+      display: inline-block;
+      width: 52px;
+      height: 26px;
+    }
+
+    .mode-toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .mode-toggle-slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(71, 85, 105, 0.5);
+      transition: var(--transition);
+      border-radius: 34px;
+    }
+
+    .mode-toggle-slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 4px;
+      bottom: 4px;
+      background-color: white;
+      transition: var(--transition);
+      border-radius: 50%;
+    }
+
+    input:checked + .mode-toggle-slider {
+      background-color: var(--test-mode);
+    }
+
+    input:checked + .mode-toggle-slider:before {
+      transform: translateX(26px);
+    }
+
+    .mode-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      padding: 6px 14px;
+      border-radius: 50px;
+      transition: var(--transition);
+    }
+
+    .mode-status.test {
+      background: rgba(245, 158, 11, 0.15);
+      color: #fcd34d;
+      border: 1px solid rgba(245, 158, 11, 0.3);
+    }
+
+    .mode-status.prod {
+      background: rgba(16, 185, 129, 0.15);
+      color: #a7f3d0;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .mode-status i {
+      font-size: 0.8rem;
+    }
+
     @media (max-width: 768px) {
       .panel { padding: 24px 20px; }
       h1 { font-size: 1.7rem; }
       .btn-row { flex-direction: column; align-items: stretch; }
       .status { min-width: 100%; justify-content: center; }
       .tag-container { justify-content: flex-start; }
+      .mode-toggle { flex-wrap: wrap; }
     }
 
     @media (max-width: 480px) {
@@ -415,7 +508,7 @@
       to { opacity: 1; transform: translateY(0); }
     }
 
-    .field, .btn-row, .header, .webhook-hint, .tabs {
+    .field, .btn-row, .header, .webhook-hint, .tabs, .mode-toggle {
       animation: fadeIn 0.5s ease-out forwards;
     }
   </style>
@@ -481,6 +574,22 @@
             </div>
           </div>
 
+          <!-- Mode Toggle -->
+          <div class="mode-toggle">
+            <div class="mode-toggle-label">
+              <i class="fas fa-flask"></i>
+              <span>Testing Mode:</span>
+            </div>
+            <label class="mode-toggle-switch">
+              <input type="checkbox" v-model="isTestingMode" @change="toggleTestingMode">
+              <span class="mode-toggle-slider"></span>
+            </label>
+            <div class="mode-status" :class="isTestingMode ? 'test' : 'prod'">
+              <i :class="isTestingMode ? 'fas fa-flask' : 'fas fa-rocket'"></i>
+              <span>{{ isTestingMode ? 'Testing Mode' : 'Production Mode' }}</span>
+            </div>
+          </div>
+
           <div class="tabs" role="tablist" aria-label="Modes">
             <div class="tab" :class="{active: activeTab==='upload'}" role="tab" tabindex="0"
                  @click="activeTab='upload'" @keyup.enter="activeTab='upload'">
@@ -500,8 +609,6 @@
 
           <div class="tag-container" v-else>
             <div class="tag"><i class="fas fa-code"></i> config.yml</div>
-            <!-- <div class="tag"><i class="fas fa-images"></i> SharePoint Images URL</div>
-            <div class="tag"><i class="fas fa-wordpress"></i> WordPress Event ID</div> -->
             <div class="tag"><i class="fas fa-ticket"></i> Bokun ID</div>
             <div class="tag"><i class="fas fa-lightbulb"></i> Game Concept</div>
           </div>
@@ -509,12 +616,24 @@
 
         <div class="webhook-hint" v-if="activeTab==='upload'">
           <i class="fas fa-link"></i>
-          <div><strong>Webhook Endpoint:</strong> {{ webhookUrl }}</div>
+          <div>
+            <strong>Webhook Endpoint:</strong> {{ currentWebhookUrl }}
+            <span style="margin-left: 8px; font-size: 0.8rem;" :class="isTestingMode ? 'test' : 'prod'">
+              <i :class="isTestingMode ? 'fas fa-flask' : 'fas fa-rocket'"></i>
+              {{ isTestingMode ? 'Testing' : 'Production' }}
+            </span>
+          </div>
         </div>
 
         <div class="webhook-hint" v-else>
           <i class="fas fa-link"></i>
-          <div><strong>Migrate Webhook:</strong> {{ migrateWebhookUrl }}</div>
+          <div>
+            <strong>Migrate Webhook:</strong> {{ currentMigrateWebhookUrl }}
+            <span style="margin-left: 8px; font-size: 0.8rem;" :class="isTestingMode ? 'test' : 'prod'">
+              <i :class="isTestingMode ? 'fas fa-flask' : 'fas fa-rocket'"></i>
+              {{ isTestingMode ? 'Testing' : 'Production' }}
+            </span>
+          </div>
         </div>
 
         <!-- UPLOAD FORM -->
@@ -575,48 +694,6 @@ sequences:
             <textarea required id="mConfigYaml" v-model="migrateConfigYaml" placeholder="# Paste your Kokimoki config.yml here"></textarea>
           </div>
 
-          <!-- <div class="field">
-            <label><i class="fas fa-images"></i> SharePoint Images URLs</label>
-
-            <div v-for="(url, idx) in sharepointImagesUrls" :key="idx" style="display:flex; gap:10px; margin-bottom:10px;">
-              <input
-                type="text"
-                v-model.trim="sharepointImagesUrls[idx]"
-                :placeholder="`https://... image url #${idx + 1}`"
-                style="flex:1;"
-              />
-              <button
-                type="button"
-                class="btn-secondary"
-                @click="removeImageUrl(idx)"
-                :disabled="isMigrateSubmitting || sharepointImagesUrls.length === 1"
-                style="padding: 12px 14px;"
-                title="Remove"
-              >
-                <i class="fas fa-trash"></i>
-              </button>
-            </div>
-
-            <button
-              type="button"
-              class="btn-secondary"
-              @click="addImageUrl"
-              :disabled="isMigrateSubmitting"
-              style="width:100%; justify-content:center;"
-            >
-              <i class="fas fa-plus"></i> Add another image URL
-            </button>
-
-            <div style="margin-top:8px; color: var(--text-muted); font-size: 0.85rem;">
-              <i class="fas fa-info-circle"></i> These will be sent to n8n as an array.
-            </div>
-          </div> -->
-
-          <!-- <div class="field">
-            <label for="wpEventId"><i class="fab fa-wordpress"></i> WordPress Event ID</label>
-            <input disabled id="wpEventId" type="text" v-model.trim="wordpressEventId" placeholder="e.g. 12345 (disabled)" />
-          </div> -->
-
           <div class="field">
             <label for="bokunId"><i class="fas fa-ticket"></i> Bokun ID<span style="color: #ef4444;">*</span></label>
             <input required id="bokunId" type="text" v-model.trim="bokunId" placeholder="e.g. 67890" />
@@ -663,15 +740,46 @@ sequences:
   </div>
 
   <script>
-    const { createApp, ref, computed } = Vue;
+    const { createApp, ref, computed, onMounted } = Vue;
 
-    // 🔗 Your n8n endpoints
-    const webhookUrlConst        = "https://citygame.app.n8n.cloud/webhook/game-upload";
-    const migrateWebhookUrlConst = "https://citygame.app.n8n.cloud/webhook/migrate";
-    const passwordCheckUrlConst  = "https://citygame.app.n8n.cloud/webhook/validate-pass";
+    // Webhook URLs - define both testing and production
+    const TEST_WEBHOOK_URL = "https://citygame.app.n8n.cloud/webhook-test/game-upload";
+    const PROD_WEBHOOK_URL = "https://citygame.app.n8n.cloud/webhook/game-upload";
+    
+    const TEST_MIGRATE_WEBHOOK_URL = "https://citygame.app.n8n.cloud/webhook-test/migrate";
+    const PROD_MIGRATE_WEBHOOK_URL = "https://citygame.app.n8n.cloud/webhook/migrate";
+    
+    const passwordCheckUrlConst = "https://citygame.app.n8n.cloud/webhook/validate-pass";
 
     createApp({
       setup() {
+        // Mode toggle state
+        const isTestingMode = ref(true); // Default to testing mode
+
+        // Load mode from localStorage on mount
+        onMounted(() => {
+          const savedMode = localStorage.getItem('n8nGameSender_testingMode');
+          if (savedMode !== null) {
+            isTestingMode.value = savedMode === 'true';
+          }
+        });
+
+        // Computed webhook URLs based on mode
+        const currentWebhookUrl = computed(() => {
+          return isTestingMode.value ? TEST_WEBHOOK_URL : PROD_WEBHOOK_URL;
+        });
+
+        const currentMigrateWebhookUrl = computed(() => {
+          return isTestingMode.value ? TEST_MIGRATE_WEBHOOK_URL : PROD_MIGRATE_WEBHOOK_URL;
+        });
+
+        function toggleTestingMode() {
+          localStorage.setItem('n8nGameSender_testingMode', isTestingMode.value);
+          // Show confirmation alert
+          const mode = isTestingMode.value ? 'Testing' : 'Production';
+          alert(`Switched to ${mode} Mode\n\nUpload: ${currentWebhookUrl.value}\nMigrate: ${currentMigrateWebhookUrl.value}`);
+        }
+
         // Tabs
         const activeTab = ref("upload");
 
@@ -682,7 +790,6 @@ sequences:
         const authLoading = ref(false);
 
         // Upload Form state
-        const webhookUrl = ref(webhookUrlConst);
         const title = ref("");
         const gameCode = ref("");
         const configYaml = ref("");
@@ -696,7 +803,6 @@ sequences:
         });
 
         // Migrate Form state
-        const migrateWebhookUrl = ref(migrateWebhookUrlConst);
         const migrateConfigYaml = ref("");
         const sharepointImagesUrls = ref([""]);
         const wordpressEventId = ref("");
@@ -707,7 +813,6 @@ sequences:
         const migrateLastError = ref(false);
         const migrateLastSuccess = ref(false);
 
-        // ✅ FIX: define canMigrateSubmit
         const canMigrateSubmit = computed(() => {
           const hasConfig = !!migrateConfigYaml.value;
           const urls = sharepointImagesUrls.value.map(u => (u || "").trim()).filter(Boolean);
@@ -802,7 +907,7 @@ sequences:
               config_yaml: configYaml.value
             };
 
-            const response = await fetch(webhookUrl.value, {
+            const response = await fetch(currentWebhookUrl.value, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify(payload)
@@ -813,8 +918,8 @@ sequences:
 
             if (!response.ok) throw new Error("n8n returned " + response.status);
 
-            alert("✅ Successfully sent to n8n!\n\nCheck Bokun in about 3 minutes.");
-            statusMessage.value = data.message || "Sent to n8n. Check Bokun in ~3 minutes.";
+            alert(`✅ Successfully sent to n8n!\n\nMode: ${isTestingMode.value ? 'Testing' : 'Production'}\nCheck Bokun in about 3 minutes.`);
+            statusMessage.value = data.message || `Sent to n8n (${isTestingMode.value ? 'Testing' : 'Production'}). Check Bokun in ~3 minutes.`;
             lastSuccessMessage.value = true;
 
             setTimeout(() => { resetForm(); }, 3000);
@@ -848,7 +953,7 @@ sequences:
               game_concept: gameConcept.value
             };
 
-            const response = await fetch(migrateWebhookUrl.value, {
+            const response = await fetch(currentMigrateWebhookUrl.value, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify(payload)
@@ -859,8 +964,8 @@ sequences:
 
             if (!response.ok) throw new Error("n8n returned " + response.status);
 
-            alert("✅ Migrate request sent!\n\nCheck Bokun in about 3 minutes.");
-            migrateStatusMessage.value = data.message || "Migrate sent. Check Bokun in ~3 minutes.";
+            alert(`✅ Migrate request sent!\n\nMode: ${isTestingMode.value ? 'Testing' : 'Production'}\nCheck Bokun in about 3 minutes.`);
+            migrateStatusMessage.value = data.message || `Migrate sent (${isTestingMode.value ? 'Testing' : 'Production'}). Check Bokun in ~3 minutes.`;
             migrateLastSuccess.value = true;
 
             setTimeout(() => { resetMigrateForm(); }, 3000);
@@ -874,15 +979,23 @@ sequences:
         }
 
         return {
+          // Mode toggle
+          isTestingMode,
+          currentWebhookUrl,
+          currentMigrateWebhookUrl,
+          toggleTestingMode,
+          
+          // Tabs
           activeTab,
 
+          // Auth
           isAuthed,
           passwordInput,
           authError,
           authLoading,
           checkPassword,
 
-          webhookUrl,
+          // Upload form
           title,
           gameCode,
           configYaml,
@@ -894,7 +1007,7 @@ sequences:
           handleSubmit,
           resetForm,
 
-          migrateWebhookUrl,
+          // Migrate form
           migrateConfigYaml,
           sharepointImagesUrls,
           addImageUrl,
