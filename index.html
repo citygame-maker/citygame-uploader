@@ -690,8 +690,13 @@ sequences:
         <!-- MIGRATE FORM -->
         <form v-else @submit.prevent="handleMigrate">
           <div class="field">
-            <label for="mConfigYaml"><i class="fas fa-cog"></i> config.yml Content<span style="color: #ef4444;">*</span></label>
-            <textarea required id="mConfigYaml" v-model="migrateConfigYaml" placeholder="# Paste your Kokimoki config.yml here"></textarea>
+            <label for="mConfigYaml"><i class="fas fa-cog"></i> config.yml Content</label>
+            <textarea id="mConfigYaml" v-model="migrateConfigYaml" placeholder="# Paste your Kokimoki config.yml here"></textarea>
+          </div>
+
+          <div class="field">
+            <label for="loquizId"><i class="fas fa-cog"></i> Loquiz ID</label>
+            <input id="loquizId" type="text" v-model.trim="loquizId" placeholder="e.g. F3EUSZJCJC" />
           </div>
 
           <div class="field">
@@ -733,7 +738,7 @@ sequences:
         </form>
 
         <div class="footer">
-          <p><i class="fas fa-user"></i> By Philip • <i class="fas fa-clock"></i> Check Bokun in about 3 minutes after sending</p>
+          <p><i class="fas fa-user"></i> By Philip • Check Bokun in about 3 minutes after sending</p>
         </div>
       </div>
     </div>
@@ -806,6 +811,7 @@ sequences:
         const migrateConfigYaml = ref("");
         const sharepointImagesUrls = ref([""]);
         const wordpressEventId = ref("");
+        const loquizId = ref("");
         const bokunId = ref("");
         const gameConcept = ref(36);
         const isMigrateSubmitting = ref(false);
@@ -819,11 +825,12 @@ sequences:
           const hasAtLeastOneUrl = urls.length > 0;
 
           return (
-            hasConfig &&
+            // hasConfig &&
             // hasAtLeastOneUrl &&
             // !!wordpressEventId.value &&
             !!bokunId.value &&
             !!gameConcept.value
+            // !!loquizId.value
           );
         });
 
@@ -886,6 +893,7 @@ sequences:
           sharepointImagesUrls.value = [""];
           wordpressEventId.value = "";
           bokunId.value = "";
+          loquizId.value = "";
           gameConcept.value = 36;
           migrateStatusMessage.value = "";
           migrateLastError.value = false;
@@ -918,7 +926,7 @@ sequences:
 
             if (!response.ok) throw new Error("n8n returned " + response.status);
 
-            alert(`✅ Successfully sent to n8n!\n\nMode: ${isTestingMode.value ? 'Testing' : 'Production'}\nCheck Bokun in about 3 minutes.`);
+            alert(`Successfully sent to n8n!\n\nMode: ${isTestingMode.value ? 'Testing' : 'Production'}\nCheck Bokun in about 3 minutes.`);
             statusMessage.value = data.message || `Sent to n8n (${isTestingMode.value ? 'Testing' : 'Production'}). Check Bokun in ~3 minutes.`;
             lastSuccessMessage.value = true;
 
@@ -950,6 +958,7 @@ sequences:
               sharepoint_images_urls: urls,
               wordpress_event_id: wordpressEventId.value,
               bokun_id: bokunId.value,
+              loquiz_id: loquizId.value,
               game_concept: gameConcept.value
             };
 
@@ -964,7 +973,7 @@ sequences:
 
             if (!response.ok) throw new Error("n8n returned " + response.status);
 
-            alert(`✅ Migrate request sent!\n\nMode: ${isTestingMode.value ? 'Testing' : 'Production'}\nCheck Bokun in about 3 minutes.`);
+            alert(`Migrate request sent!\n\nMode: ${isTestingMode.value ? 'Testing' : 'Production'}\nCheck Bokun in about 3 minutes.`);
             migrateStatusMessage.value = data.message || `Migrate sent (${isTestingMode.value ? 'Testing' : 'Production'}). Check Bokun in ~3 minutes.`;
             migrateLastSuccess.value = true;
 
@@ -1014,6 +1023,7 @@ sequences:
           removeImageUrl,
           wordpressEventId,
           bokunId,
+          loquizId,
           gameConcept,
           isMigrateSubmitting,
           migrateStatusMessage,
