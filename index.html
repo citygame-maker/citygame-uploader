@@ -708,11 +708,8 @@ sequences:
             <label for="concept"><i class="fas fa-lightbulb"></i> Game Concept<span style="color: #ef4444;">*</span></label>
             <select required id="concept" v-model="gameConcept">
               <option :value="36">Secrets</option>
-              <option value="Sherlock" disabled>Sherlock (disabled)</option>
+              <option :value="38">Sherlock</option>
             </select>
-            <div style="margin-top:8px; color: var(--text-muted); font-size: 0.85rem;">
-              <i class="fas fa-info-circle"></i> Sherlock is currently disabled. Secrets sends value <strong>36</strong>.
-            </div>
           </div>
 
           <div class="btn-row">
