@@ -4,18 +4,16 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>n8n Game Sender | Kokimoki Game Upload</title>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 640 512'><path d='M480 96H160C71.6 96 0 167.6 0 256s71.6 160 160 160c44.8 0 85.2-18.4 114.2-48h91.5c29 29.6 69.5 48 114.2 48 88.4 0 160-71.6 160-160S568.4 96 480 96zM256 276c-15.5 0-28-12.5-28-28s12.5-28 28-28 28 12.5 28 28-12.5 28-28 28zm128 0c-15.5 0-28-12.5-28-28s12.5-28 28-28 28 12.5 28 28-12.5 28-28 28z' fill='white'/></svg>" type="image/svg+xml">  <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
-
-  <!-- Font Awesome for icons -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 640 512'><path d='M480 96H160C71.6 96 0 167.6 0 256s71.6 160 160 160c44.8 0 85.2-18.4 114.2-48h91.5c29 29.6 69.5 48 114.2 48 88.4 0 160-71.6 160-160S568.4 96 480 96zM256 276c-15.5 0-28-12.5-28-28s12.5-28 28-28 28 12.5 28 28-12.5 28-28 28zm128 0c-15.5 0-28-12.5-28-28s12.5-28 28-28 28 12.5 28 28-12.5 28-28 28z' fill='white'/></svg>" type="image/svg+xml">
+  <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
   <style>
-    /* ✅ MUST be first */
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
     * {
       box-sizing: border-box;
-      font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
 
     :root {
@@ -35,9 +33,6 @@
       --radius-lg: 16px;
       --radius-md: 12px;
       --radius-sm: 8px;
-      --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      --test-mode: #f59e0b;
-      --prod-mode: #10b981;
     }
 
     body {
@@ -51,22 +46,18 @@
       background-attachment: fixed;
       color: var(--text-primary);
       min-height: 100vh;
-      position: relative;
       overflow-x: hidden;
     }
 
     body::before {
       content: '';
       position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-image:
+      inset: 0;
+      background:
         radial-gradient(circle at 20% 80%, rgba(56, 189, 248, 0.05) 0%, transparent 50%),
         radial-gradient(circle at 80% 20%, rgba(139, 92, 246, 0.05) 0%, transparent 50%);
       pointer-events: none;
-      z-index: -1;
+      z-index: 0;
     }
 
     .app-root, .full-screen-center {
@@ -76,22 +67,23 @@
       justify-content: center;
       padding: 24px;
       width: 100%;
+      position: relative;
+      z-index: 1;
     }
 
     .panel {
       background: var(--card-bg);
       backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
       border-radius: var(--radius-lg);
       padding: 32px;
       border: 1px solid var(--card-border);
-      box-shadow:
-        0 20px 60px rgba(2, 6, 23, 0.8),
-        0 0 0 1px rgba(255, 255, 255, 0.05);
+      box-shadow: 0 20px 60px rgba(2, 6, 23, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.05);
       width: 100%;
       max-width: 780px;
       position: relative;
       overflow: hidden;
-      transition: var(--transition);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
     }
 
     .panel::before {
@@ -99,25 +91,24 @@
       position: absolute;
       top: 0;
       left: 0;
-      width: 100%;
+      right: 0;
       height: 4px;
-      background: linear-gradient(to right, var(--primary), var(--secondary));
+      background: linear-gradient(90deg, var(--primary), var(--secondary));
     }
 
     .panel:hover {
-      box-shadow:
-        0 25px 70px rgba(2, 6, 23, 0.9),
-        0 0 0 1px rgba(255, 255, 255, 0.08);
+      box-shadow: 0 25px 70px rgba(2, 6, 23, 0.9), 0 0 0 1px rgba(255, 255, 255, 0.08);
       transform: translateY(-2px);
     }
 
-    .header { margin-bottom: 20px; text-align: left; }
+    .header { margin-bottom: 20px; }
 
     h1 {
       font-size: 2rem;
       margin: 0 0 8px;
-      background: linear-gradient(to right, #f8fafc, #cbd5e1);
+      background: linear-gradient(90deg, #f8fafc, #cbd5e1);
       -webkit-background-clip: text;
+      background-clip: text;
       -webkit-text-fill-color: transparent;
       font-weight: 700;
       letter-spacing: -0.5px;
@@ -134,7 +125,6 @@
       display: flex;
       gap: 10px;
       flex-wrap: wrap;
-      justify-content: flex-start;
       margin: 14px 0 18px;
     }
 
@@ -149,7 +139,7 @@
       background: rgba(30, 41, 59, 0.7);
       color: var(--text-secondary);
       border: 1px solid rgba(148, 163, 184, 0.2);
-      transition: var(--transition);
+      transition: all 0.2s ease;
     }
 
     .tag i { font-size: 0.8rem; color: var(--primary); }
@@ -160,7 +150,7 @@
       transform: translateY(-1px);
     }
 
-    .webhook-hint {
+    .info-box {
       font-size: 0.85rem;
       color: var(--text-muted);
       margin-bottom: 18px;
@@ -173,19 +163,18 @@
       gap: 10px;
     }
 
-    .webhook-hint i { color: var(--primary); }
+    .info-box i { color: var(--primary); }
 
     .field { margin-bottom: 22px; }
 
     label {
-      display: block;
+      display: flex;
+      align-items: center;
+      gap: 8px;
       font-size: 0.9rem;
       font-weight: 600;
       margin-bottom: 8px;
       color: var(--text-primary);
-      display: flex;
-      align-items: center;
-      gap: 8px;
     }
 
     label i { color: var(--primary); font-size: 0.85rem; }
@@ -201,13 +190,10 @@
       background: rgba(15, 23, 42, 0.7);
       color: var(--text-primary);
       font-size: 0.95rem;
-      transition: var(--transition);
+      transition: all 0.2s ease;
     }
 
-    input[type="text"]:focus,
-    input[type="password"]:focus,
-    textarea:focus,
-    select:focus {
+    input:focus, textarea:focus, select:focus {
       outline: none;
       border-color: var(--primary);
       box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.2);
@@ -218,7 +204,7 @@
       min-height: 140px;
       resize: vertical;
       line-height: 1.5;
-      font-family: 'JetBrains Mono', 'Fira Code', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
     }
 
     .btn-row {
@@ -242,9 +228,8 @@
       align-items: center;
       justify-content: center;
       gap: 10px;
-      white-space: nowrap;
       background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-      transition: var(--transition);
+      transition: all 0.2s ease;
       box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
     }
 
@@ -254,9 +239,20 @@
       background: linear-gradient(135deg, var(--primary-dark), #0369a1);
     }
 
-    button:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; }
+    button:active:not(:disabled) {
+      transform: translateY(0);
+    }
 
-    .btn-secondary { background: rgba(71, 85, 105, 0.5); box-shadow: none; }
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .btn-secondary {
+      background: rgba(71, 85, 105, 0.5);
+      box-shadow: none;
+    }
 
     .btn-secondary:hover:not(:disabled) {
       background: rgba(71, 85, 105, 0.7);
@@ -296,8 +292,9 @@
     .auth-title {
       font-size: 1.8rem;
       margin: 0 0 12px;
-      background: linear-gradient(to right, #f8fafc, #cbd5e1);
+      background: linear-gradient(90deg, #f8fafc, #cbd5e1);
       -webkit-background-clip: text;
+      background-clip: text;
       -webkit-text-fill-color: transparent;
       font-weight: 700;
       text-align: center;
@@ -324,7 +321,6 @@
     .logo {
       display: flex;
       align-items: center;
-      justify-content: flex-start;
       gap: 12px;
       margin-bottom: 12px;
     }
@@ -340,7 +336,7 @@
       font-size: 1.5rem;
       color: white;
       box-shadow: 0 6px 20px rgba(14, 165, 233, 0.3);
-      flex: 0 0 auto;
+      flex-shrink: 0;
     }
 
     .footer {
@@ -375,31 +371,29 @@
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      transition: var(--transition);
+      transition: all 0.2s ease;
       user-select: none;
     }
 
     .tab:hover {
       transform: translateY(-1px);
-      border-color: rgba(14,165,233,0.6);
+      border-color: rgba(14, 165, 233, 0.6);
       color: var(--text-primary);
       background: rgba(30, 41, 59, 0.65);
     }
 
     .tab.active {
-      background: linear-gradient(135deg, rgba(14,165,233,0.35), rgba(139,92,246,0.25));
-      border-color: rgba(14,165,233,0.75);
+      background: linear-gradient(135deg, rgba(14, 165, 233, 0.35), rgba(139, 92, 246, 0.25));
+      border-color: rgba(14, 165, 233, 0.75);
       color: var(--text-primary);
-      box-shadow: 0 6px 18px rgba(14,165,233,0.18);
+      box-shadow: 0 6px 18px rgba(14, 165, 233, 0.18);
     }
 
-    /* Mode Toggle Styles */
     .mode-toggle {
       display: flex;
       align-items: center;
-      justify-content: flex-start;
-      margin-bottom: 20px;
       gap: 10px;
+      margin-bottom: 20px;
     }
 
     .mode-toggle-label {
@@ -427,12 +421,9 @@
     .mode-toggle-slider {
       position: absolute;
       cursor: pointer;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
+      inset: 0;
       background-color: rgba(71, 85, 105, 0.5);
-      transition: var(--transition);
+      transition: all 0.3s ease;
       border-radius: 34px;
     }
 
@@ -444,12 +435,12 @@
       left: 4px;
       bottom: 4px;
       background-color: white;
-      transition: var(--transition);
+      transition: transform 0.3s ease;
       border-radius: 50%;
     }
 
     input:checked + .mode-toggle-slider {
-      background-color: var(--test-mode);
+      background-color: var(--warning);
     }
 
     input:checked + .mode-toggle-slider:before {
@@ -464,7 +455,7 @@
       font-weight: 500;
       padding: 6px 14px;
       border-radius: 50px;
-      transition: var(--transition);
+      transition: all 0.2s ease;
     }
 
     .mode-status.test {
@@ -479,16 +470,11 @@
       border: 1px solid rgba(16, 185, 129, 0.3);
     }
 
-    .mode-status i {
-      font-size: 0.8rem;
-    }
-
     @media (max-width: 768px) {
       .panel { padding: 24px 20px; }
       h1 { font-size: 1.7rem; }
       .btn-row { flex-direction: column; align-items: stretch; }
       .status { min-width: 100%; justify-content: center; }
-      .tag-container { justify-content: flex-start; }
       .mode-toggle { flex-wrap: wrap; }
     }
 
@@ -501,20 +487,19 @@
       .tab { width: 100%; justify-content: center; }
     }
 
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(20px); }
       to { opacity: 1; transform: translateY(0); }
     }
 
-    .field, .btn-row, .header, .webhook-hint, .tabs, .mode-toggle {
-      animation: fadeIn 0.5s ease-out forwards;
+    .field, .btn-row, .header, .info-box, .tabs, .mode-toggle {
+      animation: slideUp 0.5s ease-out;
     }
   </style>
 </head>
 
 <body>
   <div id="app">
-    <!-- PASSWORD GATE -->
     <div v-if="!isAuthed" class="full-screen-center">
       <div class="panel">
         <div class="logo" style="justify-content:center;">
@@ -543,8 +528,7 @@
         <div class="btn-row">
           <button type="button" @click="checkPassword" :disabled="authLoading">
             <i class="fas fa-unlock-alt"></i>
-            <span v-if="authLoading">Checking…</span>
-            <span v-else>Unlock Portal</span>
+            <span>{{ authLoading ? 'Checking…' : 'Unlock Portal' }}</span>
           </button>
 
           <div v-if="authError" class="auth-error">
@@ -558,7 +542,6 @@
       </div>
     </div>
 
-    <!-- MAIN APP -->
     <div v-else class="app-root">
       <div class="panel">
         <div class="header">
@@ -572,7 +555,6 @@
             </div>
           </div>
 
-          <!-- Mode Toggle -->
           <div class="mode-toggle">
             <div class="mode-toggle-label">
               <i class="fas fa-flask"></i>
@@ -588,13 +570,11 @@
             </div>
           </div>
 
-          <div class="tabs" role="tablist" aria-label="Modes">
-            <div class="tab" :class="{active: activeTab==='upload'}" role="tab" tabindex="0"
-                 @click="activeTab='upload'" @keyup.enter="activeTab='upload'">
+          <div class="tabs">
+            <div class="tab" :class="{active: activeTab==='upload'}" @click="activeTab='upload'">
               <i class="fas fa-cloud-upload-alt"></i> Upload
             </div>
-            <div class="tab" :class="{active: activeTab==='migrate'}" role="tab" tabindex="0"
-                 @click="activeTab='migrate'" @keyup.enter="activeTab='migrate'">
+            <div class="tab" :class="{active: activeTab==='migrate'}" @click="activeTab='migrate'">
               <i class="fas fa-right-left"></i> Migrate
             </div>
           </div>
@@ -612,7 +592,7 @@
           </div>
         </div>
 
-        <div class="webhook-hint" v-if="activeTab==='upload'">
+        <div class="info-box" v-if="activeTab==='upload'">
           <i class="fas fa-link"></i>
           <div>
             <strong>Webhook Endpoint:</strong> {{ currentWebhookUrl }}
@@ -623,7 +603,7 @@
           </div>
         </div>
 
-        <div class="webhook-hint" v-else>
+        <div class="info-box" v-else>
           <i class="fas fa-link"></i>
           <div>
             <strong>Migrate Webhook:</strong> {{ currentMigrateWebhookUrl }}
@@ -634,7 +614,6 @@
           </div>
         </div>
 
-        <!-- UPLOAD FORM -->
         <form v-if="activeTab==='upload'" @submit.prevent="handleSubmit">
           <div class="field">
             <label for="title"><i class="fas fa-city"></i> Game City Name</label>
@@ -666,8 +645,7 @@ sequences:
           <div class="btn-row">
             <button type="submit" :disabled="isSubmitting || !canSubmit">
               <i class="fas fa-paper-plane"></i>
-              <span v-if="isSubmitting">Sending to n8n…</span>
-              <span v-else>Send to n8n</span>
+              <span>{{ isSubmitting ? 'Sending to n8n…' : 'Send to n8n' }}</span>
             </button>
 
             <button type="button" class="btn-secondary" @click="resetForm" :disabled="isSubmitting">
@@ -685,7 +663,6 @@ sequences:
           </div>
         </form>
 
-        <!-- MIGRATE FORM -->
         <form v-else @submit.prevent="handleMigrate">
           <div class="field">
             <label for="mConfigYaml"><i class="fas fa-cog"></i> config.yml Content</label>
@@ -707,15 +684,14 @@ sequences:
             <select required id="concept" v-model="gameConcept">
               <option :value="36">Secrets</option>
               <option :value="38">Sherlock</option>
-              <option :value="syndicate" disabled>Syndicate</option>
+              <option :value="37">Syndicate</option>
             </select>
           </div>
 
           <div class="btn-row">
             <button type="submit" :disabled="isMigrateSubmitting || !canMigrateSubmit">
               <i class="fas fa-right-left"></i>
-              <span v-if="isMigrateSubmitting">Sending migrate…</span>
-              <span v-else>Run Migrate</span>
+              <span>{{ isMigrateSubmitting ? 'Sending migrate…' : 'Run Migrate' }}</span>
             </button>
 
             <button type="button" class="btn-secondary" @click="resetMigrateForm" :disabled="isMigrateSubmitting">
@@ -743,21 +719,16 @@ sequences:
   <script>
     const { createApp, ref, computed, onMounted } = Vue;
 
-    // Webhook URLs - define both testing and production
     const TEST_WEBHOOK_URL = "https://citygame.app.n8n.cloud/webhook-test/game-upload";
     const PROD_WEBHOOK_URL = "https://citygame.app.n8n.cloud/webhook/game-upload";
-    
     const TEST_MIGRATE_WEBHOOK_URL = "https://citygame.app.n8n.cloud/webhook-test/migrate";
     const PROD_MIGRATE_WEBHOOK_URL = "https://citygame.app.n8n.cloud/webhook/migrate";
-    
-    const passwordCheckUrlConst = "https://citygame.app.n8n.cloud/webhook/validate-pass";
+    const PASSWORD_CHECK_URL = "https://citygame.app.n8n.cloud/webhook/validate-pass";
 
     createApp({
       setup() {
-        // Mode toggle state
-        const isTestingMode = ref(true); // Default to testing mode
+        const isTestingMode = ref(true);
 
-        // Load mode from localStorage on mount
         onMounted(() => {
           const savedMode = localStorage.getItem('n8nGameSender_testingMode');
           if (savedMode !== null) {
@@ -765,32 +736,27 @@ sequences:
           }
         });
 
-        // Computed webhook URLs based on mode
-        const currentWebhookUrl = computed(() => {
-          return isTestingMode.value ? TEST_WEBHOOK_URL : PROD_WEBHOOK_URL;
-        });
+        const currentWebhookUrl = computed(() => 
+          isTestingMode.value ? TEST_WEBHOOK_URL : PROD_WEBHOOK_URL
+        );
 
-        const currentMigrateWebhookUrl = computed(() => {
-          return isTestingMode.value ? TEST_MIGRATE_WEBHOOK_URL : PROD_MIGRATE_WEBHOOK_URL;
-        });
+        const currentMigrateWebhookUrl = computed(() =>
+          isTestingMode.value ? TEST_MIGRATE_WEBHOOK_URL : PROD_MIGRATE_WEBHOOK_URL
+        );
 
-        function toggleTestingMode() {
+        const toggleTestingMode = () => {
           localStorage.setItem('n8nGameSender_testingMode', isTestingMode.value);
-          // Show confirmation alert
           const mode = isTestingMode.value ? 'Testing' : 'Production';
           alert(`Switched to ${mode} Mode\n\nUpload: ${currentWebhookUrl.value}\nMigrate: ${currentMigrateWebhookUrl.value}`);
-        }
+        };
 
-        // Tabs
         const activeTab = ref("upload");
 
-        // Auth state
         const isAuthed = ref(false);
         const passwordInput = ref("");
         const authError = ref("");
         const authLoading = ref(false);
 
-        // Upload Form state
         const title = ref("");
         const gameCode = ref("");
         const configYaml = ref("");
@@ -799,11 +765,10 @@ sequences:
         const lastError = ref(false);
         const lastSuccessMessage = ref(false);
 
-        const canSubmit = computed(() => {
-          return title.value && gameCode.value && configYaml.value;
-        });
+        const canSubmit = computed(() => 
+          title.value && gameCode.value && configYaml.value
+        );
 
-        // Migrate Form state
         const migrateConfigYaml = ref("");
         const sharepointImagesUrls = ref([""]);
         const wordpressEventId = ref("");
@@ -815,31 +780,11 @@ sequences:
         const migrateLastError = ref(false);
         const migrateLastSuccess = ref(false);
 
-        const canMigrateSubmit = computed(() => {
-          const hasConfig = !!migrateConfigYaml.value;
-          const urls = sharepointImagesUrls.value.map(u => (u || "").trim()).filter(Boolean);
-          const hasAtLeastOneUrl = urls.length > 0;
+        const canMigrateSubmit = computed(() => 
+          !!bokunId.value && !!gameConcept.value
+        );
 
-          return (
-            // hasConfig &&
-            // hasAtLeastOneUrl &&
-            // !!wordpressEventId.value &&
-            !!bokunId.value &&
-            !!gameConcept.value
-            // !!loquizId.value
-          );
-        });
-
-        function addImageUrl() {
-          sharepointImagesUrls.value.push("");
-        }
-
-        function removeImageUrl(idx) {
-          if (sharepointImagesUrls.value.length <= 1) return;
-          sharepointImagesUrls.value.splice(idx, 1);
-        }
-
-        async function checkPassword() {
+        const checkPassword = async () => {
           authError.value = "";
 
           if (!passwordInput.value) {
@@ -850,17 +795,16 @@ sequences:
           authLoading.value = true;
 
           try {
-            const res = await fetch(passwordCheckUrlConst, {
+            const res = await fetch(PASSWORD_CHECK_URL, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ password: passwordInput.value })
             });
 
             const text = await res.text();
-            if (!res.ok) throw new Error("n8n returned " + res.status + " (" + text + ")");
-            const trimmed = (text || "").trim();
-
-            if (trimmed === "1") {
+            if (!res.ok) throw new Error(`Server returned ${res.status}`);
+            
+            if (text.trim() === "1") {
               isAuthed.value = true;
               authError.value = "";
               passwordInput.value = "";
@@ -869,22 +813,22 @@ sequences:
             }
           } catch (err) {
             console.error(err);
-            authError.value = "Error contacting password server. Try again.";
+            authError.value = "Error contacting server. Please try again.";
           } finally {
             authLoading.value = false;
           }
-        }
+        };
 
-        function resetForm() {
+        const resetForm = () => {
           title.value = "";
           gameCode.value = "";
           configYaml.value = "";
           statusMessage.value = "";
           lastError.value = false;
           lastSuccessMessage.value = false;
-        }
+        };
 
-        function resetMigrateForm() {
+        const resetMigrateForm = () => {
           migrateConfigYaml.value = "";
           sharepointImagesUrls.value = [""];
           wordpressEventId.value = "";
@@ -894,9 +838,9 @@ sequences:
           migrateStatusMessage.value = "";
           migrateLastError.value = false;
           migrateLastSuccess.value = false;
-        }
+        };
 
-        async function handleSubmit() {
+        const handleSubmit = async () => {
           if (!canSubmit.value || isSubmitting.value) return;
 
           isSubmitting.value = true;
@@ -905,38 +849,37 @@ sequences:
           lastSuccessMessage.value = false;
 
           try {
-            const payload = {
-              title: title.value,
-              game_code: gameCode.value,
-              config_yaml: configYaml.value
-            };
-
-            const response = await fetch(currentWebhookUrl.value, {
+            const res = await fetch(currentWebhookUrl.value, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(payload)
+              body: JSON.stringify({
+                title: title.value,
+                game_code: gameCode.value,
+                config_yaml: configYaml.value
+              })
             });
 
             let data = {};
-            try { data = await response.json(); } catch (e) { data = {}; }
+            try { data = await res.json(); } catch (e) { data = {}; }
 
-            if (!response.ok) throw new Error("n8n returned " + response.status);
+            if (!res.ok) throw new Error(`Server returned ${res.status}`);
 
-            alert(`Successfully sent to n8n!\n\nMode: ${isTestingMode.value ? 'Testing' : 'Production'}\nCheck Bokun in about 3 minutes.`);
-            statusMessage.value = data.message || `Sent to n8n (${isTestingMode.value ? 'Testing' : 'Production'}). Check Bokun in ~3 minutes.`;
+            const mode = isTestingMode.value ? 'Testing' : 'Production';
+            alert(`Successfully sent to n8n!\n\nMode: ${mode}\nCheck Bokun in about 3 minutes.`);
+            statusMessage.value = data.message || `Sent to n8n (${mode}). Check Bokun in ~3 minutes.`;
             lastSuccessMessage.value = true;
 
-            setTimeout(() => { resetForm(); }, 3000);
+            setTimeout(resetForm, 3000);
           } catch (err) {
             console.error(err);
-            statusMessage.value = "Failed to send: " + err.message;
+            statusMessage.value = `Failed to send: ${err.message}`;
             lastError.value = true;
           } finally {
             isSubmitting.value = false;
           }
-        }
+        };
 
-        async function handleMigrate() {
+        const handleMigrate = async () => {
           if (!canMigrateSubmit.value || isMigrateSubmitting.value) return;
 
           isMigrateSubmitting.value = true;
@@ -949,58 +892,50 @@ sequences:
               .map(u => (u || "").trim())
               .filter(Boolean);
 
-            const payload = {
-              config_yaml: migrateConfigYaml.value,
-              sharepoint_images_urls: urls,
-              wordpress_event_id: wordpressEventId.value,
-              bokun_id: bokunId.value,
-              loquiz_id: loquizId.value,
-              game_concept: gameConcept.value
-            };
-
-            const response = await fetch(currentMigrateWebhookUrl.value, {
+            const res = await fetch(currentMigrateWebhookUrl.value, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(payload)
+              body: JSON.stringify({
+                config_yaml: migrateConfigYaml.value,
+                sharepoint_images_urls: urls,
+                wordpress_event_id: wordpressEventId.value,
+                bokun_id: bokunId.value,
+                loquiz_id: loquizId.value,
+                game_concept: gameConcept.value
+              })
             });
 
             let data = {};
-            try { data = await response.json(); } catch (e) { data = {}; }
+            try { data = await res.json(); } catch (e) { data = {}; }
 
-            if (!response.ok) throw new Error("n8n returned " + response.status);
+            if (!res.ok) throw new Error(`Server returned ${res.status}`);
 
-            alert(`Migrate request sent!\n\nMode: ${isTestingMode.value ? 'Testing' : 'Production'}\nCheck Bokun in about 3 minutes.`);
-            migrateStatusMessage.value = data.message || `Migrate sent (${isTestingMode.value ? 'Testing' : 'Production'}). Check Bokun in ~3 minutes.`;
+            const mode = isTestingMode.value ? 'Testing' : 'Production';
+            alert(`Migrate request sent!\n\nMode: ${mode}\nCheck Bokun in about 3 minutes.`);
+            migrateStatusMessage.value = data.message || `Migrate sent (${mode}). Check Bokun in ~3 minutes.`;
             migrateLastSuccess.value = true;
 
-            setTimeout(() => { resetMigrateForm(); }, 3000);
+            setTimeout(resetMigrateForm, 3000);
           } catch (err) {
             console.error(err);
-            migrateStatusMessage.value = "Failed to migrate: " + err.message;
+            migrateStatusMessage.value = `Failed to migrate: ${err.message}`;
             migrateLastError.value = true;
           } finally {
             isMigrateSubmitting.value = false;
           }
-        }
+        };
 
         return {
-          // Mode toggle
           isTestingMode,
           currentWebhookUrl,
           currentMigrateWebhookUrl,
           toggleTestingMode,
-          
-          // Tabs
           activeTab,
-
-          // Auth
           isAuthed,
           passwordInput,
           authError,
           authLoading,
           checkPassword,
-
-          // Upload form
           title,
           gameCode,
           configYaml,
@@ -1011,12 +946,8 @@ sequences:
           canSubmit,
           handleSubmit,
           resetForm,
-
-          // Migrate form
           migrateConfigYaml,
           sharepointImagesUrls,
-          addImageUrl,
-          removeImageUrl,
           wordpressEventId,
           bokunId,
           loquizId,
