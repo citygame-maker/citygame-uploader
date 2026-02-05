@@ -551,7 +551,7 @@
             </div>
             <div>
               <h1>n8n Game Sender</h1>
-              <div class="subheading">Upload Kokimoki game configurations to n8n workflow</div>
+              <div class="subheading">Upload game configurations to n8n workflow</div>
             </div>
           </div>
 
@@ -574,7 +574,11 @@
             <div class="tab" :class="{active: activeTab==='upload'}" @click="activeTab='upload'">
               <i class="fas fa-cloud-upload-alt"></i> Upload
             </div>
-            <div class="tab" :class="{active: activeTab==='migrate'}" @click="activeTab='migrate'">
+            <div :style="{
+    pointerEvents: none,
+    opacity: '0.5',
+    cursor: 'not-allowed'
+  }" class="tab" :class="{active: activeTab==='upload'}" @click="activeTab='upload'">
               <i class="fas fa-right-left"></i> Migrate
             </div>
           </div>
