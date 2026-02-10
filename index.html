@@ -572,13 +572,13 @@
 
           <div class="tabs">
             <div class="tab" :class="{active: activeTab==='upload'}" @click="activeTab='upload'">
-              <i class="fas fa-cloud-upload-alt"></i> Upload
+              <i class="fas fa-cloud-upload-alt"></i> Bokun
             </div>
             <div :style="{
-    pointerEvents: none,
+    pointerEvents: 'none',
     opacity: '0.5',
     cursor: 'not-allowed'
-  }" class="tab" :class="{active: activeTab==='upload'}" @click="activeTab='upload'">
+  }" class="tab" :class="{active: activeTab==='migrate'}">
               <i class="fas fa-right-left"></i> Migrate
             </div>
           </div>
@@ -607,11 +607,6 @@
         </div>
 
         <form v-if="activeTab==='upload'" @submit.prevent="handleSubmit">
-          <div class="field">
-            <label for="title"><i class="fas fa-city"></i> Game City Name</label>
-            <input id="title" type="text" v-model.trim="title" placeholder="e.g. Dumaguete, Manila, Cebu City" />
-          </div>
-
           <div class="field">
             <label for="configYaml"><i class="fas fa-cog"></i> config.yml Content<span style="color: #ef4444;">*</span></label>
             <textarea required
@@ -711,15 +706,20 @@ sequences:
   <script>
     const { createApp, ref, computed, onMounted } = Vue;
 
-    const TEST_WEBHOOK_URL = "https://citygame.app.n8n.cloud/webhook-test/game-upload";
-    const PROD_WEBHOOK_URL = "https://citygame.app.n8n.cloud/webhook/game-upload";
-    const TEST_MIGRATE_WEBHOOK_URL = "https://citygame.app.n8n.cloud/webhook-test/migrate";
-    const PROD_MIGRATE_WEBHOOK_URL = "https://citygame.app.n8n.cloud/webhook/migrate";
+    // Only the auth endpoint is hardcoded — all webhook URLs are returned by the server on login
     const PASSWORD_CHECK_URL = "https://citygame.app.n8n.cloud/webhook/validate-pass";
 
     createApp({
       setup() {
         const isTestingMode = ref(true);
+
+        // Webhook URLs — populated from server response on successful auth
+        const webhookUrls = ref({
+          test_upload:   null,
+          prod_upload:   null,
+          test_migrate:  null,
+          prod_migrate:  null
+        });
 
         onMounted(() => {
           const savedMode = localStorage.getItem('n8nGameSender_testingMode');
@@ -728,12 +728,12 @@ sequences:
           }
         });
 
-        const currentWebhookUrl = computed(() => 
-          isTestingMode.value ? TEST_WEBHOOK_URL : PROD_WEBHOOK_URL
+        const currentWebhookUrl = computed(() =>
+          isTestingMode.value ? webhookUrls.value.test_upload : webhookUrls.value.prod_upload
         );
 
         const currentMigrateWebhookUrl = computed(() =>
-          isTestingMode.value ? TEST_MIGRATE_WEBHOOK_URL : PROD_MIGRATE_WEBHOOK_URL
+          isTestingMode.value ? webhookUrls.value.test_migrate : webhookUrls.value.prod_migrate
         );
 
         const toggleTestingMode = () => {
@@ -757,8 +757,8 @@ sequences:
         const lastError = ref(false);
         const lastSuccessMessage = ref(false);
 
-        const canSubmit = computed(() => 
-          title.value && gameCode.value && configYaml.value
+        const canSubmit = computed(() =>
+          gameCode.value && configYaml.value
         );
 
         const migrateConfigYaml = ref("");
@@ -772,10 +772,23 @@ sequences:
         const migrateLastError = ref(false);
         const migrateLastSuccess = ref(false);
 
-        const canMigrateSubmit = computed(() => 
+        const canMigrateSubmit = computed(() =>
           !!bokunId.value && !!gameConcept.value
         );
 
+        // ---------------------------------------------------------------------------
+        // Auth — server returns webhook URLs on success
+        // Expected response shape (when password is correct):
+        //   {
+        //     "valid": true,
+        //     "urls": {
+        //       "test_upload":  "https://...",
+        //       "prod_upload":  "https://...",
+        //       "test_migrate": "https://...",
+        //       "prod_migrate": "https://..."
+        //     }
+        //   }
+        // ---------------------------------------------------------------------------
         const checkPassword = async () => {
           authError.value = "";
 
@@ -793,10 +806,39 @@ sequences:
               body: JSON.stringify({ password: passwordInput.value })
             });
 
-            const text = await res.text();
             if (!res.ok) throw new Error(`Server returned ${res.status}`);
-            
-            if (text.trim() === "1") {
+
+            // Try to parse as JSON first (new behaviour); fall back to plain "1" (legacy)
+            const contentType = res.headers.get("content-type") || "";
+            let isValid = false;
+
+            if (contentType.includes("application/json")) {
+              const data = await res.json();
+
+              if (data.valid === true) {
+                isValid = true;
+
+                // Populate webhook URLs from server response
+                if (data.urls) {
+                  webhookUrls.value = {
+                    test_upload:  data.urls.test_upload  || "",
+                    prod_upload:  data.urls.prod_upload  || "",
+                    test_migrate: data.urls.test_migrate || "",
+                    prod_migrate: data.urls.prod_migrate || ""
+                  };
+                }
+              }
+            } else {
+              // Legacy plain-text "1" response — no URLs provided
+              const text = await res.text();
+              if (text.trim() === "1") {
+                isValid = true;
+                // Warn in console; app won't function without URLs
+                console.warn("Auth server returned legacy plain-text response. Webhook URLs were not provided.");
+              }
+            }
+
+            if (isValid) {
               isAuthed.value = true;
               authError.value = "";
               passwordInput.value = "";
@@ -834,6 +876,12 @@ sequences:
 
         const handleSubmit = async () => {
           if (!canSubmit.value || isSubmitting.value) return;
+
+          if (!currentWebhookUrl.value) {
+            statusMessage.value = "Webhook URL not available. Please re-authenticate.";
+            lastError.value = true;
+            return;
+          }
 
           isSubmitting.value = true;
           statusMessage.value = "Sending to n8n…";
@@ -873,6 +921,12 @@ sequences:
 
         const handleMigrate = async () => {
           if (!canMigrateSubmit.value || isMigrateSubmitting.value) return;
+
+          if (!currentMigrateWebhookUrl.value) {
+            migrateStatusMessage.value = "Migrate URL not available. Please re-authenticate.";
+            migrateLastError.value = true;
+            return;
+          }
 
           isMigrateSubmitting.value = true;
           migrateStatusMessage.value = "Sending migrate…";
