@@ -574,11 +574,7 @@
             <div class="tab" :class="{active: activeTab==='upload'}" @click="activeTab='upload'">
               <i class="fas fa-cloud-upload-alt"></i> Bokun
             </div>
-            <div :style="{
-    pointerEvents: 'none',
-    opacity: '0.5',
-    cursor: 'not-allowed'
-  }" class="tab" :class="{active: activeTab==='migrate'}">
+            <div class="tab" :class="{active: activeTab==='migrate'}" @click="activeTab='migrate'">
               <i class="fas fa-right-left"></i> Migrate
             </div>
           </div>
@@ -607,6 +603,32 @@
         </div>
 
         <form v-if="activeTab==='upload'" @submit.prevent="handleSubmit">
+
+          <div class="field">
+            <label for="templateId"><i class="fas fa-th-large"></i> New Bokun Template ID<span style="color: #ef4444;">*</span></label>
+            <input required id="templateId" type="text" v-model.trim="templateId" placeholder="e.g. 12345" />
+          </div>
+
+          <div class="field">
+            <label for="title"><i class="fas fa-ticket"></i> Title Placeholder<span style="color: #ef4444;">*</span></label>
+            <input required id="title" type="text" v-model.trim="title" placeholder="e.g. Gardens of West" />
+          </div>
+
+          <div class="field">
+            <label for="location"><i class="fas fa-map-marker-alt"></i> Location (City Name)<span style="color: #ef4444;">*</span></label>
+            <input required id="location" type="text" v-model.trim="location" placeholder="e.g. Amsterdam" />
+          </div>
+
+          <div class="field">
+            <label for="cinemativeDescription"><i class="fas fa-film"></i> Cinematic Game Description<span style="color: #ef4444;">*</span></label>
+            <textarea required id="cinemativeDescription" v-model.trim="cinemative_description" placeholder="e.g. A thrilling adventure in the heart of Amsterdam..."></textarea>
+          </div>
+
+          <div class="field">
+            <label for="adaptiveSummary"><i class="fas fa-align-left"></i> One-Liner Adaptive Summary<span style="color: #ef4444;">*</span></label>
+            <textarea required id="adaptiveSummary" v-model.trim="adaptive_summary" placeholder="e.g. A thrilling adventure in the heart of Amsterdam..."></textarea>
+          </div>          
+
           <div class="field">
             <label for="configYaml"><i class="fas fa-cog"></i> config.yml Content<span style="color: #ef4444;">*</span></label>
             <textarea required
@@ -621,12 +643,16 @@ sequences:
 
           <div class="field">
             <label for="gameCode"><i class="fas fa-code"></i> Game Code<span style="color: #ef4444;">*</span></label>
-            <textarea required
-              id="gameCode"
-              v-model="gameCode"
-              placeholder="// Paste your game code from Apps > latest code
-69426a65a720e0d9d89****..."
-            ></textarea>
+            <input required id="gameCode" type="text" v-model="gameCode" placeholder="e.g. 69426a65a720e0d9d89****..."/>
+          </div>
+
+          <div class="field">
+            <label for="conceptId"><i class="fas fa-lightbulb"></i> Game Concept<span style="color: #ef4444;">*</span></label>
+            <select required id="conceptId" v-model="conceptId">
+              <option :value="36">Secrets</option>
+              <option :value="38" disabled>Sherlock</option>
+              <option :value="37" disabled>Syndicate</option>
+            </select>
           </div>
 
           <div class="btn-row">
@@ -750,15 +776,20 @@ sequences:
         const authLoading = ref(false);
 
         const title = ref("");
+        const location = ref("");
+        const templateId = ref("");
+        const adaptive_summary = ref("");
+        const cinemative_description = ref("");
         const gameCode = ref("");
         const configYaml = ref("");
+        const conceptId = ref("");
         const isSubmitting = ref(false);
         const statusMessage = ref("");
         const lastError = ref(false);
         const lastSuccessMessage = ref(false);
 
         const canSubmit = computed(() =>
-          gameCode.value && configYaml.value
+          gameCode.value && configYaml.value && adaptive_summary.value && location.value && title.value && conceptId.value && cinemative_description.value
         );
 
         const migrateConfigYaml = ref("");
@@ -855,8 +886,13 @@ sequences:
 
         const resetForm = () => {
           title.value = "";
+          location.value = "";
+          templateId.value = "";
+          adaptive_summary.value = "";
+          cinemative_description.value = "";
           gameCode.value = "";
           configYaml.value = "";
+          conceptId.value = "";
           statusMessage.value = "";
           lastError.value = false;
           lastSuccessMessage.value = false;
@@ -894,8 +930,13 @@ sequences:
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
                 title: title.value,
+                location: location.value,
+                adaptive_summary: adaptive_summary.value,
+                cinemative_description: cinemative_description.value,
+                template_id: templateId.value,
                 game_code: gameCode.value,
-                config_yaml: configYaml.value
+                config_yaml: configYaml.value,
+                concept_id: conceptId.value
               })
             });
 
@@ -905,8 +946,8 @@ sequences:
             if (!res.ok) throw new Error(`Server returned ${res.status}`);
 
             const mode = isTestingMode.value ? 'Testing' : 'Production';
-            alert(`Successfully sent to n8n!\n\nMode: ${mode}\nCheck Bokun in about 3 minutes.`);
-            statusMessage.value = data.message || `Sent to n8n (${mode}). Check Bokun in ~3 minutes.`;
+            alert(`Successfully sent to n8n!\n\nMode: ${mode}\nCheck Whatsapp for updates.`);
+            statusMessage.value = data.message || `Sent to n8n (${mode}). Check Whatsapp for updates.`;
             lastSuccessMessage.value = true;
 
             setTimeout(resetForm, 3000);
@@ -957,8 +998,8 @@ sequences:
             if (!res.ok) throw new Error(`Server returned ${res.status}`);
 
             const mode = isTestingMode.value ? 'Testing' : 'Production';
-            alert(`Migrate request sent!\n\nMode: ${mode}\nCheck Bokun in about 3 minutes.`);
-            migrateStatusMessage.value = data.message || `Migrate sent (${mode}). Check Bokun in ~3 minutes.`;
+            alert(`Migrate request sent!\n\nMode: ${mode}\nCheck Whatsapp for updates.`);
+            migrateStatusMessage.value = data.message || `Migrate sent (${mode}). Check Whatsapp for updates.`;
             migrateLastSuccess.value = true;
 
             setTimeout(resetMigrateForm, 3000);
@@ -983,8 +1024,13 @@ sequences:
           authLoading,
           checkPassword,
           title,
+          location,          
+          templateId,
+          adaptive_summary,
+          cinemative_description,
           gameCode,
           configYaml,
+          conceptId,
           isSubmitting,
           statusMessage,
           lastError,
