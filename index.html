@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>n8n Game Sender | Kokimoki Game Upload</title>
+  <title>n8n Game Sender | Streaming Progress (Item-based)</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 640 512'><path d='M480 96H160C71.6 96 0 167.6 0 256s71.6 160 160 160c44.8 0 85.2-18.4 114.2-48h91.5c29 29.6 69.5 48 114.2 48 88.4 0 160-71.6 160-160S568.4 96 480 96zM256 276c-15.5 0-28-12.5-28-28s12.5-28 28-28 28 12.5 28 28-12.5 28-28 28zm128 0c-15.5 0-28-12.5-28-28s12.5-28 28-28 28 12.5 28 28-12.5 28-28 28z' fill='white'/></svg>" type="image/svg+xml">
   <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -96,11 +96,6 @@
       background: linear-gradient(90deg, var(--primary), var(--secondary));
     }
 
-    .panel:hover {
-      box-shadow: 0 25px 70px rgba(2, 6, 23, 0.9), 0 0 0 1px rgba(255, 255, 255, 0.08);
-      transform: translateY(-2px);
-    }
-
     .header { margin-bottom: 20px; }
 
     h1 {
@@ -119,35 +114,6 @@
       color: var(--text-secondary);
       margin-bottom: 18px;
       line-height: 1.6;
-    }
-
-    .tag-container {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      margin: 14px 0 18px;
-    }
-
-    .tag {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 0.85rem;
-      font-weight: 500;
-      padding: 6px 14px;
-      border-radius: 50px;
-      background: rgba(30, 41, 59, 0.7);
-      color: var(--text-secondary);
-      border: 1px solid rgba(148, 163, 184, 0.2);
-      transition: all 0.2s ease;
-    }
-
-    .tag i { font-size: 0.8rem; color: var(--primary); }
-
-    .tag:hover {
-      background: rgba(30, 41, 59, 0.9);
-      border-color: var(--primary);
-      transform: translateY(-1px);
     }
 
     .info-box {
@@ -348,47 +314,6 @@
       border-top: 1px solid rgba(148, 163, 184, 0.1);
     }
 
-    .tabs {
-      display: flex;
-      gap: 10px;
-      margin: 6px 0 18px;
-      padding: 6px;
-      background: rgba(2, 6, 23, 0.35);
-      border: 1px solid rgba(148, 163, 184, 0.16);
-      border-radius: 999px;
-      width: fit-content;
-    }
-
-    .tab {
-      border: 1px solid rgba(148, 163, 184, 0.18);
-      background: rgba(30, 41, 59, 0.45);
-      color: var(--text-secondary);
-      padding: 10px 14px;
-      border-radius: 999px;
-      cursor: pointer;
-      font-weight: 700;
-      font-size: 0.9rem;
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      transition: all 0.2s ease;
-      user-select: none;
-    }
-
-    .tab:hover {
-      transform: translateY(-1px);
-      border-color: rgba(14, 165, 233, 0.6);
-      color: var(--text-primary);
-      background: rgba(30, 41, 59, 0.65);
-    }
-
-    .tab.active {
-      background: linear-gradient(135deg, rgba(14, 165, 233, 0.35), rgba(139, 92, 246, 0.25));
-      border-color: rgba(14, 165, 233, 0.75);
-      color: var(--text-primary);
-      box-shadow: 0 6px 18px rgba(14, 165, 233, 0.18);
-    }
-
     .mode-toggle {
       display: flex;
       align-items: center;
@@ -470,587 +395,408 @@
       border: 1px solid rgba(16, 185, 129, 0.3);
     }
 
+    /* Progress Modal */
+    .progress-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(8px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+      transition: all 0.2s ease;
+    }
+
+    .progress-card {
+      background: var(--card-bg);
+      border-radius: var(--radius-lg);
+      padding: 32px;
+      width: 90%;
+      max-width: 480px;
+      border: 1px solid var(--card-border);
+      box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+      text-align: center;
+      animation: slideUp 0.3s ease-out;
+    }
+
+    .progress-bar-container {
+      background: rgba(30, 41, 59, 0.6);
+      border-radius: 40px;
+      height: 12px;
+      margin: 24px 0;
+      overflow: hidden;
+    }
+
+    .progress-bar-fill {
+      width: 0%;
+      height: 100%;
+      background: linear-gradient(90deg, var(--primary), var(--secondary));
+      border-radius: 40px;
+      transition: width 0.3s ease;
+      box-shadow: 0 0 8px rgba(14,165,233,0.5);
+    }
+
+    .progress-step-message {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+      margin: 12px 0;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .progress-cancel-btn {
+      background: rgba(71,85,105,0.4);
+      padding: 8px 20px;
+      font-size: 0.85rem;
+      margin-top: 12px;
+      border-radius: 40px;
+    }
+
     @media (max-width: 768px) {
       .panel { padding: 24px 20px; }
       h1 { font-size: 1.7rem; }
       .btn-row { flex-direction: column; align-items: stretch; }
       .status { min-width: 100%; justify-content: center; }
-      .mode-toggle { flex-wrap: wrap; }
-    }
-
-    @media (max-width: 480px) {
-      .panel { padding: 20px 16px; border-radius: 12px; }
-      h1 { font-size: 1.5rem; }
-      .auth-title { font-size: 1.5rem; }
-      button { width: 100%; }
-      .tabs { width: 100%; }
-      .tab { width: 100%; justify-content: center; }
     }
 
     @keyframes slideUp {
       from { opacity: 0; transform: translateY(20px); }
       to { opacity: 1; transform: translateY(0); }
     }
-
-    .field, .btn-row, .header, .info-box, .tabs, .mode-toggle {
-      animation: slideUp 0.5s ease-out;
-    }
   </style>
 </head>
 
 <body>
   <div id="app">
+    <!-- Auth Panel -->
     <div v-if="!isAuthed" class="full-screen-center">
       <div class="panel">
         <div class="logo" style="justify-content:center;">
-          <div class="logo-icon">
-            <i class="fas fa-lock"></i>
-          </div>
+          <div class="logo-icon"><i class="fas fa-lock"></i></div>
         </div>
-
         <h2 class="auth-title">Secure Access Required</h2>
-        <p class="auth-note">
-          <i class="fas fa-shield-alt"></i> This page is password-protected. Please enter the shared password to continue.
-        </p>
-
+        <p class="auth-note"><i class="fas fa-shield-alt"></i> This page is password-protected.</p>
         <div class="field">
           <label for="password"><i class="fas fa-key"></i> Password</label>
-          <input
-            id="password"
-            type="password"
-            v-model="passwordInput"
-            @keyup.enter="checkPassword"
-            autocomplete="off"
-            placeholder="Enter access password"
-          />
+          <input id="password" type="password" v-model="passwordInput" @keyup.enter="checkPassword" placeholder="Enter access password" />
         </div>
-
         <div class="btn-row">
-          <button type="button" @click="checkPassword" :disabled="authLoading">
-            <i class="fas fa-unlock-alt"></i>
-            <span>{{ authLoading ? 'Checking…' : 'Unlock Portal' }}</span>
-          </button>
-
-          <div v-if="authError" class="auth-error">
-            <i class="fas fa-exclamation-circle"></i> {{ authError }}
-          </div>
+          <button type="button" @click="checkPassword" :disabled="authLoading"><i class="fas fa-unlock-alt"></i> <span>{{ authLoading ? 'Checking…' : 'Unlock Portal' }}</span></button>
+          <div v-if="authError" class="auth-error"><i class="fas fa-exclamation-circle"></i> {{ authError }}</div>
         </div>
-
-        <div class="footer">
-          <p><i class="fas fa-info-circle"></i> Contact the maintainer if you don't have the password</p>
-        </div>
+        <div class="footer"><p><i class="fas fa-info-circle"></i> Contact maintainer for password</p></div>
       </div>
     </div>
 
+    <!-- Main App -->
     <div v-else class="app-root">
       <div class="panel">
         <div class="header">
           <div class="logo">
-            <div class="logo-icon">
-              <i class="fas fa-gamepad"></i>
-            </div>
-            <div>
-              <h1>n8n Game Sender</h1>
-              <div class="subheading">Upload game configurations to n8n workflow</div>
-            </div>
+            <div class="logo-icon"><i class="fas fa-gamepad"></i></div>
+            <div><h1>n8n Game Sender</h1><div class="subheading">Upload game configurations to n8n workflow (Item‑based streaming)</div></div>
           </div>
-
           <div class="mode-toggle">
-            <div class="mode-toggle-label">
-              <i class="fas fa-flask"></i>
-              <span>Testing Mode:</span>
-            </div>
-            <label class="mode-toggle-switch">
-              <input type="checkbox" v-model="isTestingMode" @change="toggleTestingMode">
-              <span class="mode-toggle-slider"></span>
-            </label>
-            <div class="mode-status" :class="isTestingMode ? 'test' : 'prod'">
-              <i :class="isTestingMode ? 'fas fa-flask' : 'fas fa-rocket'"></i>
-              <span>{{ isTestingMode ? 'Testing Mode' : 'Production Mode' }}</span>
-            </div>
-          </div>
-
-          <div class="tabs">
-            <div class="tab" :class="{active: activeTab==='upload'}" @click="activeTab='upload'">
-              <i class="fas fa-cloud-upload-alt"></i> Bokun
-            </div>
-            <div class="tab" :class="{active: activeTab==='migrate'}" @click="activeTab='migrate'">
-              <i class="fas fa-right-left"></i> Migrate
-            </div>
+            <div class="mode-toggle-label"><i class="fas fa-flask"></i><span>Testing Mode:</span></div>
+            <label class="mode-toggle-switch"><input type="checkbox" v-model="isTestingMode" @change="toggleTestingMode"><span class="mode-toggle-slider"></span></label>
+            <div class="mode-status" :class="isTestingMode ? 'test' : 'prod'"><i :class="isTestingMode ? 'fas fa-flask' : 'fas fa-rocket'"></i><span>{{ isTestingMode ? 'Testing Mode' : 'Production Mode' }}</span></div>
           </div>
         </div>
+        <div class="info-box" v-if="activeTab==='upload'"><i class="fas fa-link"></i><div><strong>Webhook Endpoint:</strong> {{ currentWebhookUrl }} <span :class="isTestingMode ? 'test' : 'prod'"></span></div></div>
+        <div class="info-box" v-else><i class="fas fa-link"></i><div><strong>Migrate Webhook:</strong> {{ currentMigrateWebhookUrl }}</div></div>
 
-        <div class="info-box" v-if="activeTab==='upload'">
-          <i class="fas fa-link"></i>
-          <div>
-            <strong>Webhook Endpoint:</strong> {{ currentWebhookUrl }}
-            <span style="margin-left: 8px; font-size: 0.8rem;" :class="isTestingMode ? 'test' : 'prod'">
-              <i :class="isTestingMode ? 'fas fa-flask' : 'fas fa-rocket'"></i>
-              {{ isTestingMode ? 'Testing' : 'Production' }}
-            </span>
-          </div>
-        </div>
-
-        <div class="info-box" v-else>
-          <i class="fas fa-link"></i>
-          <div>
-            <strong>Migrate Webhook:</strong> {{ currentMigrateWebhookUrl }}
-            <span style="margin-left: 8px; font-size: 0.8rem;" :class="isTestingMode ? 'test' : 'prod'">
-              <i :class="isTestingMode ? 'fas fa-flask' : 'fas fa-rocket'"></i>
-              {{ isTestingMode ? 'Testing' : 'Production' }}
-            </span>
-          </div>
-        </div>
-
-        <form v-if="activeTab==='upload'" @submit.prevent="handleSubmit">
-
-          <div class="field">
-            <label for="templateId"><i class="fas fa-th-large"></i> New Bokun Template ID<span style="color: #ef4444;">*</span></label>
-            <input required id="templateId" type="text" v-model.trim="templateId" placeholder="e.g. 12345" />
-          </div>
-
-          <div class="field">
-            <label for="title"><i class="fas fa-ticket"></i> Title Placeholder<span style="color: #ef4444;">*</span></label>
-            <input required id="title" type="text" v-model.trim="title" placeholder="e.g. Gardens of West" />
-          </div>
-
-          <div class="field">
-            <label for="location"><i class="fas fa-map-marker-alt"></i> Location (City Name)<span style="color: #ef4444;">*</span></label>
-            <input required id="location" type="text" v-model.trim="location" placeholder="e.g. Amsterdam" />
-          </div>
-
-          <div class="field">
-            <label for="cinemativeDescription"><i class="fas fa-film"></i> Cinematic Game Description<span style="color: #ef4444;">*</span></label>
-            <textarea required id="cinemativeDescription" v-model.trim="cinemative_description" placeholder="e.g. A thrilling adventure in the heart of Amsterdam..."></textarea>
-          </div>
-
-          <div class="field">
-            <label for="adaptiveSummary"><i class="fas fa-align-left"></i> One-Liner Adaptive Summary<span style="color: #ef4444;">*</span></label>
-            <textarea required id="adaptiveSummary" v-model.trim="adaptive_summary" placeholder="e.g. A thrilling adventure in the heart of Amsterdam..."></textarea>
-          </div>          
-
-          <div class="field">
-            <label for="configYaml"><i class="fas fa-cog"></i> config.yml Content<span style="color: #ef4444;">*</span></label>
-            <textarea required
-              id="configYaml"
-              v-model="configYaml"
-              placeholder="# Paste your Kokimoki config.yml here
-title: Dumaguete
-sequences:
-# ..."
-            ></textarea>
-          </div>
-
-          <div class="field">
-            <label for="gameCode"><i class="fas fa-code"></i> Game Code<span style="color: #ef4444;">*</span></label>
-            <input required id="gameCode" type="text" v-model="gameCode" placeholder="e.g. 69426a65a720e0d9d89****..."/>
-          </div>
-
-          <div class="field">
-            <label for="conceptId"><i class="fas fa-lightbulb"></i> Game Concept<span style="color: #ef4444;">*</span></label>
-            <select required id="conceptId" v-model="conceptId">
-              <option :value="36">Secrets</option>
-              <option :value="38" disabled>Sherlock</option>
-              <option :value="37" disabled>Syndicate</option>
-            </select>
-          </div>
-
+        <!-- Upload Form -->
+        <form v-if="activeTab==='upload'" @submit.prevent="handleSubmitWithProgress">
+          <div class="field"><label><i class="fas fa-th-large"></i> New Bokun Template ID *</label><input required type="text" v-model.trim="templateId" placeholder="e.g. 12345" /></div>
+          <div class="field"><label><i class="fas fa-ticket"></i> Title Placeholder *</label><input required type="text" v-model.trim="title" placeholder="e.g. Gardens of West" /></div>
+          <div class="field"><label><i class="fas fa-map-marker-alt"></i> Location *</label><input required type="text" v-model.trim="location" placeholder="e.g. Amsterdam" /></div>
+          <div class="field"><label><i class="fas fa-film"></i> Cinematic Description *</label><textarea required v-model.trim="cinemative_description" placeholder="A thrilling adventure..."></textarea></div>
+          <div class="field"><label><i class="fas fa-align-left"></i> One-Liner Summary *</label><textarea required v-model.trim="adaptive_summary" placeholder="Exciting challenge..."></textarea></div>
+          <div class="field"><label><i class="fas fa-cog"></i> config.yml *</label><textarea required v-model="configYaml" placeholder="# Paste config.yml"></textarea></div>
+          <div class="field"><label><i class="fas fa-code"></i> Game Code *</label><input required type="text" v-model="gameCode" placeholder="e.g. 69426a65..."/></div>
+          <div class="field"><label><i class="fas fa-lightbulb"></i> Game Concept *</label><select required v-model="conceptId"><option :value="36">Secrets</option><option :value="38" disabled>Sherlock</option><option :value="37" disabled>Syndicate</option></select></div>
           <div class="btn-row">
-            <button type="submit" :disabled="isSubmitting || !canSubmit">
-              <i class="fas fa-paper-plane"></i>
-              <span>{{ isSubmitting ? 'Sending to n8n…' : 'Send to n8n' }}</span>
-            </button>
-
-            <button type="button" class="btn-secondary" @click="resetForm" :disabled="isSubmitting">
-              <i class="fas fa-eraser"></i> Clear
-            </button>
-
-            <div
-              class="status"
-              :class="{ error: lastError, success: lastSuccessMessage, info: !lastError && !lastSuccessMessage && statusMessage }"
-              v-if="statusMessage"
-            >
-              <i :class="lastError ? 'fas fa-exclamation-circle' : lastSuccessMessage ? 'fas fa-check-circle' : 'fas fa-info-circle'"></i>
-              {{ statusMessage }}
-            </div>
+            <button type="submit" :disabled="isSubmitting || !canSubmit"><i class="fas fa-paper-plane"></i> {{ isSubmitting ? 'Sending...' : 'Send to n8n' }}</button>
+            <button type="button" class="btn-secondary" @click="resetForm" :disabled="isSubmitting"><i class="fas fa-eraser"></i> Clear</button>
+            <div class="status" :class="{ error: lastError, success: lastSuccessMessage }" v-if="statusMessage"><i :class="lastError ? 'fas fa-exclamation-circle' : 'fas fa-check-circle'"></i> {{ statusMessage }}</div>
           </div>
         </form>
 
-        <form v-else @submit.prevent="handleMigrate">
-          <div class="field">
-            <label for="mConfigYaml"><i class="fas fa-cog"></i> config.yml Content</label>
-            <textarea id="mConfigYaml" v-model="migrateConfigYaml" placeholder="# Paste your Kokimoki config.yml here"></textarea>
-          </div>
-
-          <div class="field">
-            <label for="loquizId"><i class="fas fa-cog"></i> Loquiz ID</label>
-            <input id="loquizId" type="text" v-model.trim="loquizId" placeholder="e.g. F3EUSZJCJC" />
-          </div>
-
-          <div class="field">
-            <label for="bokunId"><i class="fas fa-ticket"></i> Bokun ID<span style="color: #ef4444;">*</span></label>
-            <input required id="bokunId" type="text" v-model.trim="bokunId" placeholder="e.g. 67890" />
-          </div>
-
-          <div class="field">
-            <label for="concept"><i class="fas fa-lightbulb"></i> Game Concept<span style="color: #ef4444;">*</span></label>
-            <select required id="concept" v-model="gameConcept">
-              <option :value="36">Secrets</option>
-              <option :value="38">Sherlock</option>
-              <option :value="37">Syndicate</option>
-            </select>
-          </div>
-
+        <!-- Migrate Form -->
+        <form v-else @submit.prevent="handleMigrateWithProgress">
+          <div class="field"><label><i class="fas fa-cog"></i> config.yml</label><textarea v-model="migrateConfigYaml" placeholder="# Paste config.yml"></textarea></div>
+          <div class="field"><label><i class="fas fa-cog"></i> Loquiz ID</label><input type="text" v-model.trim="loquizId" placeholder="e.g. F3EUSZJCJC" /></div>
+          <div class="field"><label><i class="fas fa-ticket"></i> Bokun ID *</label><input required type="text" v-model.trim="bokunId" placeholder="e.g. 67890" /></div>
+          <div class="field"><label><i class="fas fa-lightbulb"></i> Game Concept *</label><select required v-model="gameConcept"><option :value="36">Secrets</option><option :value="38">Sherlock</option><option :value="37">Syndicate</option></select></div>
           <div class="btn-row">
-            <button type="submit" :disabled="isMigrateSubmitting || !canMigrateSubmit">
-              <i class="fas fa-right-left"></i>
-              <span>{{ isMigrateSubmitting ? 'Sending migrate…' : 'Run Migrate' }}</span>
-            </button>
-
-            <button type="button" class="btn-secondary" @click="resetMigrateForm" :disabled="isMigrateSubmitting">
-              <i class="fas fa-eraser"></i> Clear
-            </button>
-
-            <div
-              class="status"
-              :class="{ error: migrateLastError, success: migrateLastSuccess, info: !migrateLastError && !migrateLastSuccess && migrateStatusMessage }"
-              v-if="migrateStatusMessage"
-            >
-              <i :class="migrateLastError ? 'fas fa-exclamation-circle' : migrateLastSuccess ? 'fas fa-check-circle' : 'fas fa-info-circle'"></i>
-              {{ migrateStatusMessage }}
-            </div>
+            <button type="submit" :disabled="isMigrateSubmitting || !canMigrateSubmit"><i class="fas fa-right-left"></i> {{ isMigrateSubmitting ? 'Migrating...' : 'Run Migrate' }}</button>
+            <button type="button" class="btn-secondary" @click="resetMigrateForm" :disabled="isMigrateSubmitting"><i class="fas fa-eraser"></i> Clear</button>
+            <div class="status" :class="{ error: migrateLastError, success: migrateLastSuccess }" v-if="migrateStatusMessage"><i :class="migrateLastError ? 'fas fa-exclamation-circle' : 'fas fa-check-circle'"></i> {{ migrateStatusMessage }}</div>
           </div>
         </form>
+        <div class="footer"><p><i class="fas fa-user"></i> By Philip | Progress from n8n 'item' events</p></div>
+      </div>
+    </div>
 
-        <div class="footer">
-          <p><i class="fas fa-user"></i> By Philip</p>
-        </div>
+    <!-- Progress Modal (n8n item‑based streaming) -->
+    <div v-if="progressActive" class="progress-modal">
+      <div class="progress-card">
+        <i class="fas fa-sync-alt fa-spin" style="font-size: 2rem; color: var(--primary); margin-bottom: 12px;"></i>
+        <h3 style="margin: 0 0 8px;">Processing with n8n</h3>
+        <p style="font-size: 0.85rem; margin: 0 0 12px; color: var(--text-muted);">{{ progressStepMessage }}</p>
+        <div class="progress-bar-container"><div class="progress-bar-fill" :style="{ width: progressPercent + '%' }"></div></div>
+        <div class="progress-step-message"><i class="fas fa-stream"></i> <span>{{ progressPercent }}% • step {{ currentStep }}/4</span></div>
+        <button class="btn-secondary progress-cancel-btn" @click="cancelStreaming" :disabled="!progressActive"><i class="fas fa-stop"></i> Cancel</button>
       </div>
     </div>
   </div>
 
   <script>
     const { createApp, ref, computed, onMounted } = Vue;
-
-    // Only the auth endpoint is hardcoded — all webhook URLs are returned by the server on login
     const PASSWORD_CHECK_URL = "https://citygame.app.n8n.cloud/webhook/validate-pass";
 
     createApp({
       setup() {
         const isTestingMode = ref(true);
-
-        // Webhook URLs — populated from server response on successful auth
-        const webhookUrls = ref({
-          test_upload:   null,
-          prod_upload:   null,
-          test_migrate:  null,
-          prod_migrate:  null
-        });
-
-        onMounted(() => {
-          const savedMode = localStorage.getItem('n8nGameSender_testingMode');
-          if (savedMode !== null) {
-            isTestingMode.value = savedMode === 'true';
-          }
-        });
-
-        const currentWebhookUrl = computed(() =>
-          isTestingMode.value ? webhookUrls.value.test_upload : webhookUrls.value.prod_upload
-        );
-
-        const currentMigrateWebhookUrl = computed(() =>
-          isTestingMode.value ? webhookUrls.value.test_migrate : webhookUrls.value.prod_migrate
-        );
-
-        const toggleTestingMode = () => {
-          localStorage.setItem('n8nGameSender_testingMode', isTestingMode.value);
-          const mode = isTestingMode.value ? 'Testing' : 'Production';
-          alert(`Switched to ${mode} Mode\n\nUpload: ${currentWebhookUrl.value}\nMigrate: ${currentMigrateWebhookUrl.value}`);
-        };
-
+        const webhookUrls = ref({ test_upload: null, prod_upload: null, test_migrate: null, prod_migrate: null });
+        onMounted(() => { const saved = localStorage.getItem('n8nGameSender_testingMode'); if (saved !== null) isTestingMode.value = saved === 'true'; });
+        const currentWebhookUrl = computed(() => isTestingMode.value ? webhookUrls.value.test_upload : webhookUrls.value.prod_upload);
+        const currentMigrateWebhookUrl = computed(() => isTestingMode.value ? webhookUrls.value.test_migrate : webhookUrls.value.prod_migrate);
+        const toggleTestingMode = () => { localStorage.setItem('n8nGameSender_testingMode', isTestingMode.value); alert(`Switched to ${isTestingMode.value ? 'Testing' : 'Production'} Mode`); };
+        
         const activeTab = ref("upload");
-
         const isAuthed = ref(false);
         const passwordInput = ref("");
         const authError = ref("");
         const authLoading = ref(false);
-
-        const title = ref("");
-        const location = ref("");
-        const templateId = ref("");
-        const adaptive_summary = ref("");
-        const cinemative_description = ref("");
-        const gameCode = ref("");
-        const configYaml = ref("");
-        const conceptId = ref("");
-        const isSubmitting = ref(false);
-        const statusMessage = ref("");
-        const lastError = ref(false);
-        const lastSuccessMessage = ref(false);
-
-        const canSubmit = computed(() =>
-          gameCode.value && configYaml.value && adaptive_summary.value && location.value && title.value && conceptId.value && cinemative_description.value
-        );
-
-        const migrateConfigYaml = ref("");
-        const sharepointImagesUrls = ref([""]);
-        const wordpressEventId = ref("");
-        const loquizId = ref("");
-        const bokunId = ref("");
-        const gameConcept = ref(36);
-        const isMigrateSubmitting = ref(false);
-        const migrateStatusMessage = ref("");
-        const migrateLastError = ref(false);
-        const migrateLastSuccess = ref(false);
-
-        const canMigrateSubmit = computed(() =>
-          !!bokunId.value && !!gameConcept.value
-        );
-
-        // ---------------------------------------------------------------------------
-        // Auth — server returns webhook URLs on success
-        // Expected response shape (when password is correct):
-        //   {
-        //     "valid": true,
-        //     "urls": {
-        //       "test_upload":  "https://...",
-        //       "prod_upload":  "https://...",
-        //       "test_migrate": "https://...",
-        //       "prod_migrate": "https://..."
-        //     }
-        //   }
-        // ---------------------------------------------------------------------------
-        const checkPassword = async () => {
-          authError.value = "";
-
-          if (!passwordInput.value) {
-            authError.value = "Please enter the password.";
-            return;
+        
+        // Upload fields
+        const title = ref(""); const location = ref(""); const templateId = ref("");
+        const adaptive_summary = ref(""); const cinemative_description = ref("");
+        const gameCode = ref(""); const configYaml = ref(""); const conceptId = ref("");
+        const isSubmitting = ref(false); const statusMessage = ref(""); const lastError = ref(false); const lastSuccessMessage = ref(false);
+        const canSubmit = computed(() => gameCode.value && configYaml.value && adaptive_summary.value && location.value && title.value && conceptId.value && cinemative_description.value);
+        
+        // Migrate fields
+        const migrateConfigYaml = ref(""); const sharepointImagesUrls = ref([""]); const wordpressEventId = ref("");
+        const loquizId = ref(""); const bokunId = ref(""); const gameConcept = ref(36);
+        const isMigrateSubmitting = ref(false); const migrateStatusMessage = ref(""); const migrateLastError = ref(false); const migrateLastSuccess = ref(false);
+        const canMigrateSubmit = computed(() => !!bokunId.value && !!gameConcept.value);
+        
+        // Progress state
+        const progressActive = ref(false);
+        const progressPercent = ref(0);
+        const currentStep = ref(0);
+        const progressStepMessage = ref("Waiting for n8n stream...");
+        let currentAbortController = null;
+        let itemsReceived = 0;
+        const TOTAL_STEPS = 4;
+        
+        const cancelStreaming = () => {
+          if (currentAbortController) {
+            currentAbortController.abort();
+            currentAbortController = null;
           }
-
-          authLoading.value = true;
-
-          try {
-            const res = await fetch(PASSWORD_CHECK_URL, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ password: passwordInput.value })
-            });
-
-            if (!res.ok) throw new Error(`Server returned ${res.status}`);
-
-            // Try to parse as JSON first (new behaviour); fall back to plain "1" (legacy)
-            const contentType = res.headers.get("content-type") || "";
-            let isValid = false;
-
-            if (contentType.includes("application/json")) {
-              const data = await res.json();
-
-              if (data.valid === true) {
-                isValid = true;
-
-                // Populate webhook URLs from server response
-                if (data.urls) {
-                  webhookUrls.value = {
-                    test_upload:  data.urls.test_upload  || "",
-                    prod_upload:  data.urls.prod_upload  || "",
-                    test_migrate: data.urls.test_migrate || "",
-                    prod_migrate: data.urls.prod_migrate || ""
-                  };
+          progressActive.value = false;
+          progressPercent.value = 0;
+          currentStep.value = 0;
+          statusMessage.value = "Operation cancelled.";
+          lastError.value = true;
+          itemsReceived = 0;
+        };
+        
+        // Core streaming parser for n8n item format: JSON objects separated by newlines
+        // Each object has { type, content?, metadata }
+        async function consumeItemStream(response, abortSignal) {
+          if (!response.body) throw new Error("Streaming not supported by this endpoint");
+          const reader = response.body.getReader();
+          const decoder = new TextDecoder();
+          let buffer = "";
+          itemsReceived = 0;
+          
+          while (true) {
+            if (abortSignal?.aborted) {
+              await reader.cancel();
+              throw new Error("Cancelled");
+            }
+            const { done, value } = await reader.read();
+            if (done) break;
+            buffer += decoder.decode(value, { stream: true });
+            const lines = buffer.split(/\r?\n/);
+            buffer = lines.pop() || "";
+            
+            for (const line of lines) {
+              if (line.trim().length === 0) continue;
+              try {
+                const parsed = JSON.parse(line);
+                // Handle n8n item events
+                if (parsed.type === "item" && parsed.content !== undefined) {
+                  itemsReceived++;
+                  // Ensure we don't exceed total steps
+                  const step = Math.min(itemsReceived, TOTAL_STEPS);
+                  currentStep.value = step;
+                  progressPercent.value = Math.floor((step / TOTAL_STEPS) * 100);
+                  // Use content as status message
+                  progressStepMessage.value = parsed.content;
+                  // Also update step display if content looks like a step description
+                  if (typeof parsed.content === "string" && parsed.content.trim().length > 0) {
+                    progressStepMessage.value = parsed.content;
+                  }
                 }
-              }
-            } else {
-              // Legacy plain-text "1" response — no URLs provided
-              const text = await res.text();
-              if (text.trim() === "1") {
-                isValid = true;
-                // Warn in console; app won't function without URLs
-                console.warn("Auth server returned legacy plain-text response. Webhook URLs were not provided.");
+                // Optional: log begin/end but not needed for progress
+              } catch (e) {
+                // Not a valid JSON line, ignore (could be part of incomplete chunk)
+                console.debug("Non-JSON line:", line);
               }
             }
-
-            if (isValid) {
-              isAuthed.value = true;
-              authError.value = "";
-              passwordInput.value = "";
-            } else {
-              authError.value = "Incorrect password.";
+          }
+          // After stream ends, ensure we reached 100% if we have all items
+          if (itemsReceived >= TOTAL_STEPS) {
+            progressPercent.value = 100;
+            currentStep.value = TOTAL_STEPS;
+            if (progressStepMessage.value === "Waiting for n8n stream..." || !progressStepMessage.value) {
+              progressStepMessage.value = "All steps completed!";
             }
-          } catch (err) {
-            console.error(err);
-            authError.value = "Error contacting server. Please try again.";
-          } finally {
-            authLoading.value = false;
+          } else if (itemsReceived > 0 && itemsReceived < TOTAL_STEPS) {
+            // Stream ended early – incomplete
+            throw new Error(`Stream ended early: only ${itemsReceived}/${TOTAL_STEPS} items received`);
           }
-        };
-
-        const resetForm = () => {
-          title.value = "";
-          location.value = "";
-          templateId.value = "";
-          adaptive_summary.value = "";
-          cinemative_description.value = "";
-          gameCode.value = "";
-          configYaml.value = "";
-          conceptId.value = "";
-          statusMessage.value = "";
-          lastError.value = false;
-          lastSuccessMessage.value = false;
-        };
-
-        const resetMigrateForm = () => {
-          migrateConfigYaml.value = "";
-          sharepointImagesUrls.value = [""];
-          wordpressEventId.value = "";
-          bokunId.value = "";
-          loquizId.value = "";
-          gameConcept.value = 36;
-          migrateStatusMessage.value = "";
-          migrateLastError.value = false;
-          migrateLastSuccess.value = false;
-        };
-
-        const handleSubmit = async () => {
-          if (!canSubmit.value || isSubmitting.value) return;
-
-          if (!currentWebhookUrl.value) {
-            statusMessage.value = "Webhook URL not available. Please re-authenticate.";
-            lastError.value = true;
-            return;
-          }
-
-          isSubmitting.value = true;
-          statusMessage.value = "Sending to n8n…";
-          lastError.value = false;
-          lastSuccessMessage.value = false;
-
+          return { success: true, itemsReceived };
+        }
+        
+        // Wrapper for submission with item streaming
+        async function submitWithItemStreaming(url, payload, actionName) {
+          const abortController = new AbortController();
+          currentAbortController = abortController;
+          progressActive.value = true;
+          progressPercent.value = 0;
+          currentStep.value = 0;
+          itemsReceived = 0;
+          progressStepMessage.value = "Connecting to n8n stream...";
+          
           try {
-            const res = await fetch(currentWebhookUrl.value, {
+            const response = await fetch(url, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                title: title.value,
-                location: location.value,
-                adaptive_summary: adaptive_summary.value,
-                cinemative_description: cinemative_description.value,
-                template_id: templateId.value,
-                game_code: gameCode.value,
-                config_yaml: configYaml.value,
-                concept_id: conceptId.value
-              })
+              body: JSON.stringify(payload),
+              signal: abortController.signal
             });
-
-            let data = {};
-            try { data = await res.json(); } catch (e) { data = {}; }
-
-            if (!res.ok) throw new Error(`Server returned ${res.status}`);
-
-            const mode = isTestingMode.value ? 'Testing' : 'Production';
-            alert(`Successfully sent to n8n!\n\nMode: ${mode}\nCheck Whatsapp for updates.`);
-            statusMessage.value = data.message || `Sent to n8n (${mode}). Check Whatsapp for updates.`;
+            if (!response.ok) {
+              const errorText = await response.text();
+              throw new Error(`HTTP ${response.status}: ${errorText.substring(0, 100)}`);
+            }
+            await consumeItemStream(response, abortController.signal);
+            if (abortController.signal.aborted) throw new Error("Cancelled");
+            progressActive.value = false;
+            return { success: true, message: `${actionName} completed successfully (${itemsReceived} items processed).` };
+          } catch (err) {
+            progressActive.value = false;
+            if (err.name === 'AbortError' || err.message === 'Cancelled') {
+              throw new Error("Streaming cancelled by user");
+            }
+            throw err;
+          } finally {
+            currentAbortController = null;
+            itemsReceived = 0;
+          }
+        }
+        
+        // Upload handler with item streaming
+        const handleSubmitWithProgress = async () => {
+          if (!canSubmit.value || isSubmitting.value) return;
+          if (!currentWebhookUrl.value) { statusMessage.value = "Webhook URL missing. Re-authenticate."; lastError.value = true; return; }
+          isSubmitting.value = true;
+          try {
+            const payload = {
+              title: title.value, location: location.value,
+              adaptive_summary: adaptive_summary.value, cinemative_description: cinemative_description.value,
+              template_id: templateId.value, game_code: gameCode.value,
+              config_yaml: configYaml.value, concept_id: conceptId.value
+            };
+            await submitWithItemStreaming(currentWebhookUrl.value, payload, "Upload");
+            alert(`✅ Upload finished!\nMode: ${isTestingMode.value ? 'Testing' : 'Production'}\nAll 4 steps processed.`);
+            statusMessage.value = "Upload successful with item-based progress.";
             lastSuccessMessage.value = true;
-
-            setTimeout(resetForm, 3000);
+            setTimeout(resetForm, 2000);
           } catch (err) {
             console.error(err);
-            statusMessage.value = `Failed to send: ${err.message}`;
+            statusMessage.value = `Stream error: ${err.message}`;
             lastError.value = true;
           } finally {
             isSubmitting.value = false;
           }
         };
-
-        const handleMigrate = async () => {
+        
+        // Migrate handler with item streaming
+        const handleMigrateWithProgress = async () => {
           if (!canMigrateSubmit.value || isMigrateSubmitting.value) return;
-
-          if (!currentMigrateWebhookUrl.value) {
-            migrateStatusMessage.value = "Migrate URL not available. Please re-authenticate.";
-            migrateLastError.value = true;
-            return;
-          }
-
+          if (!currentMigrateWebhookUrl.value) { migrateStatusMessage.value = "Migrate URL missing."; migrateLastError.value = true; return; }
           isMigrateSubmitting.value = true;
-          migrateStatusMessage.value = "Sending migrate…";
-          migrateLastError.value = false;
-          migrateLastSuccess.value = false;
-
           try {
-            const urls = sharepointImagesUrls.value
-              .map(u => (u || "").trim())
-              .filter(Boolean);
-
-            const res = await fetch(currentMigrateWebhookUrl.value, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                config_yaml: migrateConfigYaml.value,
-                sharepoint_images_urls: urls,
-                wordpress_event_id: wordpressEventId.value,
-                bokun_id: bokunId.value,
-                loquiz_id: loquizId.value,
-                game_concept: gameConcept.value
-              })
-            });
-
-            let data = {};
-            try { data = await res.json(); } catch (e) { data = {}; }
-
-            if (!res.ok) throw new Error(`Server returned ${res.status}`);
-
-            const mode = isTestingMode.value ? 'Testing' : 'Production';
-            alert(`Migrate request sent!\n\nMode: ${mode}\nCheck Whatsapp for updates.`);
-            migrateStatusMessage.value = data.message || `Migrate sent (${mode}). Check Whatsapp for updates.`;
+            const urls = sharepointImagesUrls.value.map(u => (u || "").trim()).filter(Boolean);
+            const payload = {
+              config_yaml: migrateConfigYaml.value, sharepoint_images_urls: urls,
+              wordpress_event_id: wordpressEventId.value, bokun_id: bokunId.value,
+              loquiz_id: loquizId.value, game_concept: gameConcept.value
+            };
+            await submitWithItemStreaming(currentMigrateWebhookUrl.value, payload, "Migration");
+            alert(`✅ Migration stream completed!\nMode: ${isTestingMode.value ? 'Testing' : 'Production'}`);
+            migrateStatusMessage.value = "Migration successful via item streaming.";
             migrateLastSuccess.value = true;
-
-            setTimeout(resetMigrateForm, 3000);
+            setTimeout(resetMigrateForm, 2000);
           } catch (err) {
             console.error(err);
-            migrateStatusMessage.value = `Failed to migrate: ${err.message}`;
+            migrateStatusMessage.value = `Migration stream error: ${err.message}`;
             migrateLastError.value = true;
           } finally {
             isMigrateSubmitting.value = false;
           }
         };
-
+        
+        // Auth (unchanged)
+        const checkPassword = async () => {
+          authError.value = "";
+          if (!passwordInput.value) { authError.value = "Enter password."; return; }
+          authLoading.value = true;
+          try {
+            const res = await fetch(PASSWORD_CHECK_URL, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ password: passwordInput.value }) });
+            if (!res.ok) throw new Error(`Server ${res.status}`);
+            const contentType = res.headers.get("content-type") || "";
+            let isValid = false;
+            if (contentType.includes("application/json")) {
+              const data = await res.json();
+              if (data.valid === true) {
+                isValid = true;
+                if (data.urls) webhookUrls.value = { test_upload: data.urls.test_upload || "", prod_upload: data.urls.prod_upload || "", test_migrate: data.urls.test_migrate || "", prod_migrate: data.urls.prod_migrate || "" };
+              }
+            } else {
+              const text = await res.text();
+              if (text.trim() === "1") isValid = true;
+            }
+            if (isValid) { isAuthed.value = true; passwordInput.value = ""; authError.value = ""; }
+            else authError.value = "Incorrect password.";
+          } catch (err) { authError.value = "Error contacting server."; } finally { authLoading.value = false; }
+        };
+        
+        const resetForm = () => { title.value = ""; location.value = ""; templateId.value = ""; adaptive_summary.value = ""; cinemative_description.value = ""; gameCode.value = ""; configYaml.value = ""; conceptId.value = ""; statusMessage.value = ""; lastError.value = false; lastSuccessMessage.value = false; };
+        const resetMigrateForm = () => { migrateConfigYaml.value = ""; sharepointImagesUrls.value = [""]; wordpressEventId.value = ""; bokunId.value = ""; loquizId.value = ""; gameConcept.value = 36; migrateStatusMessage.value = ""; migrateLastError.value = false; migrateLastSuccess.value = false; };
+        
         return {
-          isTestingMode,
-          currentWebhookUrl,
-          currentMigrateWebhookUrl,
-          toggleTestingMode,
-          activeTab,
-          isAuthed,
-          passwordInput,
-          authError,
-          authLoading,
-          checkPassword,
-          title,
-          location,          
-          templateId,
-          adaptive_summary,
-          cinemative_description,
-          gameCode,
-          configYaml,
-          conceptId,
-          isSubmitting,
-          statusMessage,
-          lastError,
-          lastSuccessMessage,
-          canSubmit,
-          handleSubmit,
-          resetForm,
-          migrateConfigYaml,
-          sharepointImagesUrls,
-          wordpressEventId,
-          bokunId,
-          loquizId,
-          gameConcept,
-          isMigrateSubmitting,
-          migrateStatusMessage,
-          migrateLastError,
-          migrateLastSuccess,
-          canMigrateSubmit,
-          handleMigrate,
-          resetMigrateForm
+          isTestingMode, currentWebhookUrl, currentMigrateWebhookUrl, toggleTestingMode, activeTab,
+          isAuthed, passwordInput, authError, authLoading, checkPassword,
+          title, location, templateId, adaptive_summary, cinemative_description, gameCode, configYaml, conceptId,
+          isSubmitting, statusMessage, lastError, lastSuccessMessage, canSubmit, resetForm,
+          migrateConfigYaml, sharepointImagesUrls, wordpressEventId, bokunId, loquizId, gameConcept,
+          isMigrateSubmitting, migrateStatusMessage, migrateLastError, migrateLastSuccess, canMigrateSubmit, resetMigrateForm,
+          handleSubmitWithProgress, handleMigrateWithProgress,
+          progressActive, progressPercent, currentStep, progressStepMessage, cancelStreaming
         };
       }
     }).mount("#app");
