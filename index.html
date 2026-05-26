@@ -569,6 +569,22 @@
         const currentMigrateWebhookUrl = computed(() => isTestingMode.value ? webhookUrls.value.test_migrate : webhookUrls.value.prod_migrate);
         const toggleTestingMode = () => { localStorage.setItem('n8nGameSender_testingMode', isTestingMode.value); alert(`Switched to ${isTestingMode.value ? 'Testing' : 'Production'} Mode`); };
         
+    const pendingCities = ref([]);
+        const isLoadingCities = ref(false);
+        const formatDate = (dateString) => {
+          const diffDays = Math.round((new Date(dateString) - new Date()) / (1000 * 60 * 60 * 24));
+          return new Intl.RelativeTimeFormat('en', { numeric: 'auto' }).format(diffDays, 'day');
+        };
+        const fetchPendingCities = async () => {
+          isLoadingCities.value = true;
+          try {
+            const res = await fetch("https://openclaw-172725.tailb2094d.ts.net/webhook-test/929924d9-ed13-47fc-8f0f-7c0998de80a8");
+            pendingCities.value = await res.json();
+          } catch (err) { console.error("Failed to fetch cities:", err); }
+          finally { isLoadingCities.value = false; }
+        };
+        fetchPendingCities();
+
         const activeTab = ref("upload");
         const isAuthed = ref(false);
         const passwordInput = ref("");
@@ -787,6 +803,7 @@
         const resetMigrateForm = () => { migrateConfigYaml.value = ""; sharepointImagesUrls.value = [""]; wordpressEventId.value = ""; bokunId.value = ""; loquizId.value = ""; gameConcept.value = 36; migrateStatusMessage.value = ""; migrateLastError.value = false; migrateLastSuccess.value = false; };
         
         return {
+          pendingCities, isLoadingCities, formatDate,
           isTestingMode, currentWebhookUrl, currentMigrateWebhookUrl, toggleTestingMode, activeTab,
           isAuthed, passwordInput, authError, authLoading, checkPassword,
           title, location, templateId, adaptive_summary, cinemative_description, gameCode, configYaml, conceptId,
