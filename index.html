@@ -619,7 +619,13 @@
           isLoadingCities.value = true;
           try {
             const res = await fetch("https://openclaw-172725.tailb2094d.ts.net/webhook-test/929924d9-ed13-47fc-8f0f-7c0998de80a8");
-            pendingCities.value = await res.json();
+            const data = await res.json();
+            // n8n response structure contains "rows" array
+            if (Array.isArray(data) && data[0] && data[0].rows) {
+              pendingCities.value = data[0].rows.map(r => r.json);
+            } else {
+              pendingCities.value = data;
+            }
           } catch (err) { console.error("Failed to fetch cities:", err); }
           finally { isLoadingCities.value = false; }
         };
