@@ -527,7 +527,7 @@
     <div v-else class="app-root">
       <div class="sidebar-panel" v-if="isAuthed">
         <h3>Pending Cities</h3>
-        <p style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 10px;">Last Checked at: {{ new Date().toLocaleDateString() }}</p>
+        <p style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 10px;">Last Checked at: {{ lastCheckedAt ? new Date(lastCheckedAt).toLocaleString() : "N/A" }}</p>
         <div v-if="isLoadingCities">Loading...</div>
         <ul v-else>
           <li v-for="city in pendingCities" :key="city.id">
@@ -610,6 +610,7 @@
         const toggleTestingMode = () => { localStorage.setItem('n8nGameSender_testingMode', isTestingMode.value); alert(`Switched to ${isTestingMode.value ? 'Testing' : 'Production'} Mode`); };
         
     const pendingCities = ref([]);
+        const lastCheckedAt = ref(null);
         const isLoadingCities = ref(false);
         const formatDate = (dateString) => {
           const diffDays = Math.round((new Date(dateString) - new Date()) / (1000 * 60 * 60 * 24));
@@ -623,6 +624,7 @@
             // n8n response structure contains "rows" array
             if (Array.isArray(data) && data[0] && data[0].rows) {
               pendingCities.value = data[0].rows.map(r => r.json);
+              lastCheckedAt.value = data[0].lastExecutionStoppedAt;
             } else {
               pendingCities.value = data;
             }
@@ -849,7 +851,7 @@
         const resetMigrateForm = () => { migrateConfigYaml.value = ""; sharepointImagesUrls.value = [""]; wordpressEventId.value = ""; bokunId.value = ""; loquizId.value = ""; gameConcept.value = 36; migrateStatusMessage.value = ""; migrateLastError.value = false; migrateLastSuccess.value = false; };
         
         return {
-          pendingCities, isLoadingCities, formatDate,
+          pendingCities, lastCheckedAt, isLoadingCities, formatDate,
           isTestingMode, currentWebhookUrl, currentMigrateWebhookUrl, toggleTestingMode, activeTab,
           isAuthed, passwordInput, authError, authLoading, checkPassword,
           title, location, templateId, adaptive_summary, cinemative_description, gameCode, configYaml, conceptId,
