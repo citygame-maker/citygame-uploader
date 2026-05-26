@@ -60,7 +60,18 @@
       z-index: 0;
     }
 
-    .app-root, .full-screen-center {
+    .app-root {
+      min-height: 100vh;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 24px;
+      width: 100%;
+      position: relative;
+      z-index: 1;
+      gap: 24px;
+    }
+    .full-screen-center {
       min-height: 100vh;
       display: flex;
       align-items: center;
@@ -70,6 +81,24 @@
       position: relative;
       z-index: 1;
     }
+    .sidebar-panel {
+      background: var(--card-bg);
+      backdrop-filter: blur(10px);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      border: 1px solid var(--card-border);
+      width: 300px;
+      color: var(--text-secondary);
+      font-size: 0.85rem;
+      max-height: 80vh;
+      overflow-y: auto;
+      flex-shrink: 0;
+    }
+    .sidebar-panel h3 { color: var(--text-primary); margin-top: 0; }
+    .sidebar-panel ul { list-style: none; padding: 0; }
+    .sidebar-panel li { margin-bottom: 10px; padding: 10px; background: rgba(30, 41, 59, 0.4); border-radius: 8px; }
+    .sidebar-panel small { display: block; color: var(--text-muted); margin-top: 4px; }
+
 
     .panel {
       background: var(--card-bg);
@@ -497,6 +526,17 @@
 
     <!-- Main App -->
     <div v-else class="app-root">
+      <div class="sidebar-panel" v-if="isAuthed">
+        <h3>Pending Cities</h3>
+        <div v-if="isLoadingCities">Loading...</div>
+        <ul v-else>
+          <li v-for="city in pendingCities" :key="city.id">
+            <strong>{{ city.citySlug.toUpperCase() }}</strong><br>
+            {{ city.countrySlug }}
+            <small>{{ formatDate(city.createdAt) }}</small>
+          </li>
+        </ul>
+      </div>
       <div class="panel">
         <div class="header">
           <div class="logo">
