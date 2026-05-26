@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>n8n Game Sender | Streaming Progress (Item-based)</title>
+  <title>Game Uploader | Streaming Progress (Item-based)</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 640 512'><path d='M480 96H160C71.6 96 0 167.6 0 256s71.6 160 160 160c44.8 0 85.2-18.4 114.2-48h91.5c29 29.6 69.5 48 114.2 48 88.4 0 160-71.6 160-160S568.4 96 480 96zM256 276c-15.5 0-28-12.5-28-28s12.5-28 28-28 28 12.5 28 28-12.5 28-28 28zm128 0c-15.5 0-28-12.5-28-28s12.5-28 28-28 28 12.5 28 28-12.5 28-28 28z' fill='white'/></svg>" type="image/svg+xml">
   <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -501,7 +501,7 @@
         <div class="header">
           <div class="logo">
             <div class="logo-icon"><i class="fas fa-gamepad"></i></div>
-            <div><h1>n8n Game Sender</h1><div class="subheading">Upload game configurations to n8n workflow (Item‑based streaming)</div></div>
+            <div><h1>Game Uploader</h1><div class="subheading">Upload game configurations to n8n workflow</div></div>
           </div>
           <div class="mode-toggle">
             <div class="mode-toggle-label"><i class="fas fa-flask"></i><span>Testing Mode:</span></div>
@@ -509,8 +509,6 @@
             <div class="mode-status" :class="isTestingMode ? 'test' : 'prod'"><i :class="isTestingMode ? 'fas fa-flask' : 'fas fa-rocket'"></i><span>{{ isTestingMode ? 'Testing Mode' : 'Production Mode' }}</span></div>
           </div>
         </div>
-        <div class="info-box" v-if="activeTab==='upload'"><i class="fas fa-link"></i><div><strong>Webhook Endpoint:</strong> {{ currentWebhookUrl }} <span :class="isTestingMode ? 'test' : 'prod'"></span></div></div>
-        <div class="info-box" v-else><i class="fas fa-link"></i><div><strong>Migrate Webhook:</strong> {{ currentMigrateWebhookUrl }}</div></div>
 
         <!-- Upload Form -->
         <form v-if="activeTab==='upload'" @submit.prevent="handleSubmitWithProgress">
@@ -523,7 +521,7 @@
           <div class="field"><label><i class="fas fa-code"></i> Game Code *</label><input required type="text" v-model="gameCode" placeholder="e.g. 69426a65..."/></div>
           <div class="field"><label><i class="fas fa-lightbulb"></i> Game Concept *</label><select required v-model="conceptId"><option :value="36">Secrets</option><option :value="38" disabled>Sherlock</option><option :value="37" disabled>Syndicate</option></select></div>
           <div class="btn-row">
-            <button type="submit" :disabled="isSubmitting || !canSubmit"><i class="fas fa-paper-plane"></i> {{ isSubmitting ? 'Sending...' : 'Send to n8n' }}</button>
+            <button type="submit" :disabled="isSubmitting || !canSubmit"><i class="fas fa-paper-plane"></i> {{ isSubmitting ? 'Uploading...' : 'Upload' }}</button>
             <button type="button" class="btn-secondary" @click="resetForm" :disabled="isSubmitting"><i class="fas fa-eraser"></i> Clear</button>
             <div class="status" :class="{ error: lastError, success: lastSuccessMessage }" v-if="statusMessage"><i :class="lastError ? 'fas fa-exclamation-circle' : 'fas fa-check-circle'"></i> {{ statusMessage }}</div>
           </div>
