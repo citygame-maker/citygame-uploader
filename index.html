@@ -618,7 +618,7 @@
         const fetchPendingCities = async () => {
           isLoadingCities.value = true;
           try {
-            const res = await fetch("https://openclaw-172725.tailb2094d.ts.net/webhook-test/929924d9-ed13-47fc-8f0f-7c0998de80a8");
+            const res = await fetch("https://openclaw-172725.tailb2094d.ts.net/webhook/929924d9-ed13-47fc-8f0f-7c0998de80a8");
             const data = await res.json();
             // n8n response structure contains "rows" array
             if (Array.isArray(data) && data[0] && data[0].rows) {
