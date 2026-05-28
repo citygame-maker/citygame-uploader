@@ -90,13 +90,29 @@
       width: 300px;
       color: var(--text-secondary);
       font-size: 0.85rem;
-      max-height: 80vh;
       overflow-y: auto;
       flex-shrink: 0;
     }
     .sidebar-panel h3 { color: var(--text-primary); margin-top: 0; }
     .sidebar-panel ul { list-style: none; padding: 0; }
-    .sidebar-panel li { margin-bottom: 10px; padding: 10px; background: rgba(30, 41, 59, 0.4); border-radius: 8px; }
+        .sidebar-panel li { margin-bottom: 10px; padding: 10px; background: rgba(30, 41, 59, 0.4); border-radius: 8px; display: flex; justify-content: space-between; align-items: center; }
+    .sidebar-panel .city-button {
+      background: rgba(14, 165, 233, 0.2);
+      color: var(--primary);
+      border: 1px solid var(--primary);
+      border-radius: 6px;
+      padding: 5px 10px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      flex-shrink: 0;
+      margin-left: 10px;
+    }
+    .sidebar-panel .city-button:hover {
+      background: var(--primary);
+      color: white;
+    }
 
 
     .panel {
@@ -526,14 +542,24 @@
     <!-- Main App -->
     <div v-else class="app-root">
       <div class="sidebar-panel" v-if="isAuthed">
-        <h3>Pending Cities</h3>
+        <h3>Pending Cities (No City Page)</h3>
         <p style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 10px;">Last Checked at: {{ lastCheckedAt ? new Date(lastCheckedAt).toLocaleString() : "N/A" }}</p>
         <div v-if="isLoadingCities">Loading...</div>
         <ul v-else>
-          <li v-for="city in pendingCities" :key="city.id">
-            <strong>{{ city.citySlug.toUpperCase() }}</strong><br>
-            {{ city.countrySlug }}
-            <small>{{ formatDate(city.createdAt) }}</small>
+                    <li v-for="city in pendingCities" :key="city.id">
+            <div>
+              <strong>{{ city.citySlug.toUpperCase() }}</strong><br>
+              <span style="color: var(--text-muted); font-size: 0.75rem;">{{ city.countrySlug }}</span>
+            </div>
+            <button
+              class="city-button"
+              @click="createCityPage(city)"
+              :disabled="cityStatus[city.id] === 'creating'"
+              type="button"
+            >
+              <i v-if="cityStatus[city.id] === 'creating'" class="fas fa-spinner fa-spin"></i>
+              <span>{{ cityStatus[city.id] === 'creating' ? 'Creating...' : 'Create Page' }}</span>
+            </button>
           </li>
         </ul>
       </div>
@@ -632,6 +658,46 @@
           finally { isLoadingCities.value = false; }
         };
         fetchPendingCities();
+
+                const CREATE_CITY_WEBHOOK_URL = "https://openclaw-172725.tailb2094d.ts.net/webhook-test/24656a17-fd90-4b5e-bc61-1b846d9d06fa";
+        const cityStatus = ref({}); // { [cityId]: 'creating' | 'error' | undefined }
+
+        const createCityPage = async (city) => {
+          if (!city?.citySlug) return;
+
+          const ok = confirm(`Create city page for ${city.citySlug.toUpperCase()}?`);
+          if (!ok) return;
+
+          cityStatus.value[city.id] = "creating";
+
+          try {
+            const res = await fetch(CREATE_CITY_WEBHOOK_URL, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                citySlug: city.citySlug,
+                countrySlug: city.countrySlug,
+              }),
+            });
+
+            if (!res.ok) {
+              const txt = await res.text();
+              throw new Error(`HTTP ${res.status}: ${txt.substring(0, 200)}`);
+            }
+
+            alert(`✅ Created city page for ${city.citySlug.toUpperCase()}`);
+            delete cityStatus.value[city.id];
+            await fetchPendingCities();
+          } catch (err) {
+            console.error(err);
+            alert(`❌ Failed to create city page for ${city.citySlug.toUpperCase()}: ${err.message}`);
+            cityStatus.value[city.id] = "error";
+            setTimeout(() => {
+              delete cityStatus.value[city.id];
+            }, 4000);
+          }
+        };
+
 
         const activeTab = ref("upload");
         const isAuthed = ref(false);
@@ -850,7 +916,8 @@
         const resetForm = () => { title.value = ""; location.value = ""; templateId.value = ""; adaptive_summary.value = ""; cinemative_description.value = ""; gameCode.value = ""; configYaml.value = ""; conceptId.value = ""; statusMessage.value = ""; lastError.value = false; lastSuccessMessage.value = false; };
         const resetMigrateForm = () => { migrateConfigYaml.value = ""; sharepointImagesUrls.value = [""]; wordpressEventId.value = ""; bokunId.value = ""; loquizId.value = ""; gameConcept.value = 36; migrateStatusMessage.value = ""; migrateLastError.value = false; migrateLastSuccess.value = false; };
         
-        return {
+                return {
+          createCityPage, cityStatus,
           pendingCities, lastCheckedAt, isLoadingCities, formatDate,
           isTestingMode, currentWebhookUrl, currentMigrateWebhookUrl, toggleTestingMode, activeTab,
           isAuthed, passwordInput, authError, authLoading, checkPassword,
