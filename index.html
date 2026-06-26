@@ -114,6 +114,70 @@
       color: white;
     }
 
+    .location-tools-panel {
+      background: var(--card-bg);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      border: 1px solid var(--card-border);
+      width: 300px;
+      color: var(--text-secondary);
+      font-size: 0.85rem;
+      flex-shrink: 0;
+    }
+
+    .location-tools-panel h3 {
+      color: var(--text-primary);
+      margin: 0 0 8px;
+    }
+
+    .location-tools-panel .panel-note {
+      color: var(--text-muted);
+      font-size: 0.78rem;
+      line-height: 1.5;
+      margin: 0 0 18px;
+    }
+
+    .location-tool-section {
+      padding: 14px 0;
+      border-top: 1px solid rgba(148, 163, 184, 0.14);
+    }
+
+    .location-tool-section:first-of-type {
+      border-top: 0;
+      padding-top: 0;
+    }
+
+    .location-tool-section h4 {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text-primary);
+      font-size: 0.92rem;
+      margin: 0 0 12px;
+    }
+
+    .location-tools-panel input,
+    .location-tools-panel select {
+      padding: 11px 12px;
+      font-size: 0.85rem;
+    }
+
+    .location-tools-panel button {
+      width: 100%;
+      margin-top: 10px;
+      padding: 11px 14px;
+      font-size: 0.85rem;
+    }
+
+    .slug-preview {
+      margin-top: 8px;
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      overflow-wrap: anywhere;
+    }
+
 
     .panel {
       background: var(--card-bg);
@@ -504,6 +568,8 @@
     }
 
     @media (max-width: 768px) {
+      .app-root { flex-direction: column; align-items: stretch; }
+      .sidebar-panel, .location-tools-panel { width: 100%; }
       .panel { padding: 24px 20px; }
       h1 { font-size: 1.7rem; }
       .btn-row { flex-direction: column; align-items: stretch; }
@@ -592,48 +658,17 @@
           <div class="field">
             <label><i class="fas fa-map-marker-alt"></i> City *</label>
 
-                        <div v-if="!useCustomCity">
-              <select
-                required
-                v-model="selectedCitySlug"
-                :disabled="!selectedCountrySlug || isLoadingCityOptions"
-              >
-                <option value="" disabled>
-                  {{ !selectedCountrySlug ? "Select a country first" : "Select a city" }}
-                </option>
-                <option v-for="c in cities" :key="c.slug" :value="c.slug">{{ c.name }}</option>
-              </select>
-              <div v-if="isLoadingCityOptions" style="margin-top: 6px; font-size: 0.8rem; color: var(--text-muted);">Loading cities…</div>
-            </div>
-
-            <div v-else>
-              <input required type="text" v-model.trim="customCityInput" placeholder="Type city name (or slug)" />
-              <div style="margin-top: 8px; font-size: 0.8rem; color: var(--text-muted);">
-                Slug to send: <code style="color: var(--text-secondary);">{{ effectiveCitySlug }}</code>
-              </div>
-
-              <div style="display:flex; gap:10px; margin-top: 10px; align-items:center;">
-                <button
-                  type="button"
-                  class="btn-secondary"
-                  @click="createNewCity"
-                  :disabled="creatingCustomCity || !selectedCountrySlug || !effectiveCitySlug"
-                >
-                  <i v-if="creatingCustomCity" class="fas fa-spinner fa-spin"></i>
-                  <span>{{ creatingCustomCity ? 'Creating…' : 'Create new city' }}</span>
-                </button>
-              </div>
-              <div style="margin-top: 8px; font-size: 0.8rem; color: var(--text-muted);">
-                If you don’t create it, we will still submit using the slug above.
-              </div>
-            </div>
-
-            <div style="margin-top: 12px; display:flex; align-items:center; gap:10px;">
-              <input id="toggle-custom-city" type="checkbox" v-model="useCustomCity" />
-              <label for="toggle-custom-city" style="margin: 0; font-weight: 500; color: var(--text-secondary);">
-                City not in list? Create a new one
-              </label>
-            </div>
+            <select
+              required
+              v-model="selectedCitySlug"
+              :disabled="!selectedCountrySlug || isLoadingCityOptions"
+            >
+              <option value="" disabled>
+                {{ !selectedCountrySlug ? "Select a country first" : "Select a city" }}
+              </option>
+              <option v-for="c in cities" :key="c.slug" :value="c.slug">{{ c.name }}</option>
+            </select>
+            <div v-if="isLoadingCityOptions" style="margin-top: 6px; font-size: 0.8rem; color: var(--text-muted);">Loading cities…</div>
           </div>
           <div class="field"><label><i class="fas fa-film"></i> Cinematic Description *</label><textarea required v-model.trim="cinemative_description" placeholder="A thrilling adventure..."></textarea></div>
           <div class="field"><label><i class="fas fa-align-left"></i> One-Liner Summary *</label><textarea required v-model.trim="adaptive_summary" placeholder="Exciting challenge..."></textarea></div>
@@ -660,6 +695,47 @@
           </div>
         </form>
         <div class="footer"><p><i class="fas fa-user"></i> By Philip | Progress from n8n 'item' events</p></div>
+      </div>
+
+      <div class="location-tools-panel" v-if="activeTab==='upload'">
+        <h3>Create Location Pages</h3>
+        <p class="panel-note">Add a country or city here, then continue using the main form.</p>
+
+        <div class="location-tool-section">
+          <h4><i class="fas fa-globe"></i> New Country Page</h4>
+          <input type="text" v-model.trim="customCountryInput" placeholder="Type country name or slug" />
+          <div class="slug-preview">Slug to create: <code style="color: var(--text-secondary);">{{ customCountrySlug || 'country-slug' }}</code></div>
+          <button
+            type="button"
+            class="btn-secondary"
+            @click="createNewCountry"
+            :disabled="creatingCustomCountry || !customCountrySlug"
+          >
+            <i v-if="creatingCustomCountry" class="fas fa-spinner fa-spin"></i>
+            <i v-else class="fas fa-plus"></i>
+            <span>{{ creatingCustomCountry ? 'Creating…' : 'Create country' }}</span>
+          </button>
+        </div>
+
+        <div class="location-tool-section">
+          <h4><i class="fas fa-map-marker-alt"></i> New City Page</h4>
+          <select v-model="newCityCountrySlug">
+            <option value="" disabled>Select country</option>
+            <option v-for="c in countries" :key="'new-city-' + c.slug" :value="c.slug">{{ c.name }}</option>
+          </select>
+          <input style="margin-top: 10px;" type="text" v-model.trim="customCityInput" placeholder="Type city name or slug" />
+          <div class="slug-preview">Slug to create: <code style="color: var(--text-secondary);">{{ customCitySlug || 'city-slug' }}</code></div>
+          <button
+            type="button"
+            class="btn-secondary"
+            @click="createNewCity"
+            :disabled="creatingCustomCity || !newCityCountrySlug || !customCitySlug"
+          >
+            <i v-if="creatingCustomCity" class="fas fa-spinner fa-spin"></i>
+            <i v-else class="fas fa-plus"></i>
+            <span>{{ creatingCustomCity ? 'Creating…' : 'Create city' }}</span>
+          </button>
+        </div>
       </div>
     </div>
 
@@ -771,6 +847,7 @@
         // Location (Country + City)
         const COUNTRIES_WEBHOOK_URL = "https://openclaw-172725.tailb2094d.ts.net/webhook/b2ec1ed4-0d98-4b05-aa34-2bd67f8be34c";
         const CITIES_WEBHOOK_URL = "https://openclaw-172725.tailb2094d.ts.net/webhook/56961ed2-e5c8-4fce-acca-aa8afff28a1e";
+        const CREATE_COUNTRY_WEBHOOK_URL = "https://openclaw-172725.tailb2094d.ts.net/webhook/20cf54f8-1cca-4a68-9c8f-f6f1730524d4";
 
         const countries = ref([]);
         const cities = ref([]);
@@ -780,7 +857,10 @@
         const selectedCountrySlug = ref("");
         const selectedCitySlug = ref("");
 
-        const useCustomCity = ref(false);
+        const customCountryInput = ref("");
+        const creatingCustomCountry = ref(false);
+
+        const newCityCountrySlug = ref("");
         const customCityInput = ref("");
         const creatingCustomCity = ref(false);
 
@@ -794,9 +874,12 @@
             .replace(/^-+|-+$/g, "");
         };
 
-        const effectiveCitySlug = computed(() => {
-          return useCustomCity.value ? slugify(customCityInput.value) : selectedCitySlug.value;
-        });
+        const customCountrySlug = computed(() => slugify(customCountryInput.value));
+        const customCitySlug = computed(() => slugify(customCityInput.value));
+
+        const effectiveCitySlug = computed(() => selectedCitySlug.value);
+
+        const effectiveCountrySlug = computed(() => selectedCountrySlug.value);
 
                 // When a country is selected, fetch cities for that country
         watch(selectedCountrySlug, async (newSlug) => {
@@ -805,6 +888,7 @@
           cities.value = [];
 
           if (!newSlug) return;
+          if (!newCityCountrySlug.value) newCityCountrySlug.value = newSlug;
           await fetchCities(newSlug);
         });
 
@@ -821,6 +905,48 @@
             console.error("Failed to load countries:", err);
           } finally {
             isLoadingCountries.value = false;
+          }
+        };
+
+        // Create a new country (if not in list)
+        const createNewCountry = async () => {
+          if (!customCountrySlug.value) return;
+
+          const countrySlug = customCountrySlug.value;
+          const ok = confirm(`Create new country "${countrySlug}"?`);
+          if (!ok) return;
+
+          creatingCustomCountry.value = true;
+          try {
+            const res = await fetch(CREATE_COUNTRY_WEBHOOK_URL, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                countrySlug,
+                country_slug: countrySlug,
+              }),
+            });
+
+            if (!res.ok) {
+              const txt = await res.text();
+              throw new Error(`HTTP ${res.status}: ${txt.substring(0, 200)}`);
+            }
+
+            alert(`✅ Created country: ${countrySlug}`);
+            await fetchCountries();
+
+            if (!countries.value.some((country) => country.slug === countrySlug)) {
+              countries.value.push({ slug: countrySlug, name: countrySlug });
+            }
+
+            selectedCountrySlug.value = countrySlug;
+            newCityCountrySlug.value = countrySlug;
+            customCountryInput.value = "";
+          } catch (err) {
+            console.error(err);
+            alert(`❌ Failed to create country: ${err.message}`);
+          } finally {
+            creatingCustomCountry.value = false;
           }
         };
 
@@ -867,10 +993,10 @@
 
         // Create a new city (if not in list)
         const createNewCity = async () => {
-          if (!selectedCountrySlug.value || !effectiveCitySlug.value) return;
+          if (!newCityCountrySlug.value || !customCitySlug.value) return;
 
           const ok = confirm(
-            `Create new city "${effectiveCitySlug.value}" under country "${selectedCountrySlug.value}"?`
+            `Create new city "${customCitySlug.value}" under country "${newCityCountrySlug.value}"?`
           );
           if (!ok) return;
 
@@ -880,8 +1006,8 @@
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
-                countrySlug: selectedCountrySlug.value,
-                citySlug: effectiveCitySlug.value,
+                countrySlug: newCityCountrySlug.value,
+                citySlug: customCitySlug.value,
               }),
             });
 
@@ -890,12 +1016,19 @@
               throw new Error(`HTTP ${res.status}: ${txt.substring(0, 200)}`);
             }
 
-            alert(`✅ Created city: ${effectiveCitySlug.value}`);
-            await fetchCities();
+            alert(`✅ Created city: ${customCitySlug.value}`);
 
-            // select it and switch back to dropdown
-            selectedCitySlug.value = effectiveCitySlug.value;
-            useCustomCity.value = false;
+            if (selectedCountrySlug.value !== newCityCountrySlug.value) {
+              selectedCountrySlug.value = newCityCountrySlug.value;
+            }
+
+            await fetchCities(newCityCountrySlug.value);
+
+            if (!cities.value.some((city) => city.slug === customCitySlug.value)) {
+              cities.value.push({ slug: customCitySlug.value, name: customCitySlug.value });
+            }
+
+            selectedCitySlug.value = customCitySlug.value;
             customCityInput.value = "";
           } catch (err) {
             console.error(err);
@@ -916,9 +1049,10 @@
           gameCode.value &&
           configYaml.value &&
           adaptive_summary.value &&
-          selectedCountrySlug.value &&
+          effectiveCountrySlug.value &&
           effectiveCitySlug.value &&
           title.value &&
+          templateId.value &&
           conceptId.value &&
           cinemative_description.value
         );
@@ -1054,19 +1188,9 @@
           if (!currentWebhookUrl.value) { statusMessage.value = "Webhook URL missing. Re-authenticate."; lastError.value = true; return; }
           isSubmitting.value = true;
           try {
-                        // If user selected "custom city" we can optionally create it first.
-            if (useCustomCity.value && selectedCountrySlug.value && effectiveCitySlug.value) {
-              const shouldCreate = confirm(
-                `City is custom. Do you want to create "${effectiveCitySlug.value}" first before submitting?`
-              );
-              if (shouldCreate) {
-                await createNewCity();
-              }
-            }
-
             const payload = {
               title: title.value,
-              country_slug: selectedCountrySlug.value,
+              country_slug: effectiveCountrySlug.value,
               location: effectiveCitySlug.value, // slug only
               adaptive_summary: adaptive_summary.value,
               cinemative_description: cinemative_description.value,
@@ -1151,7 +1275,8 @@
 
           selectedCountrySlug.value = "";
           selectedCitySlug.value = "";
-          useCustomCity.value = false;
+          customCountryInput.value = "";
+          newCityCountrySlug.value = "";
           customCityInput.value = "";
 
           statusMessage.value = "";
@@ -1168,7 +1293,9 @@
                     title, templateId, adaptive_summary, cinemative_description, gameCode, configYaml, conceptId,
           countries, cities,
           selectedCountrySlug, selectedCitySlug,
-          useCustomCity, customCityInput, effectiveCitySlug,
+          customCountryInput, customCountrySlug, effectiveCountrySlug,
+          createNewCountry, creatingCustomCountry,
+          newCityCountrySlug, customCityInput, customCitySlug, effectiveCitySlug,
           createNewCity, creatingCustomCity,
           isLoadingCountries, isLoadingCityOptions,
           isSubmitting, statusMessage, lastError, lastSuccessMessage, canSubmit, resetForm,
