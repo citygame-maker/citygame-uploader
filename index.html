@@ -759,10 +759,38 @@
     createApp({
       setup() {
         const isTestingMode = ref(true);
-        const webhookUrls = ref({ test_upload: null, prod_upload: null, test_migrate: null, prod_migrate: null });
+        const webhookUrls = ref({
+          test_upload: "",      // Testing upload workflow
+          prod_upload: "",      // Production upload workflow
+          test_migrate: "",     // Testing migration workflow
+          prod_migrate: "",     // Production migration workflow
+          pending_cities: "",   // Pending cities list workflow
+          create_city: "",      // Create city page workflow
+          countries: "",        // Countries list workflow
+          cities: "",           // Cities list workflow
+          create_country: ""    // Create country page workflow
+        });
         onMounted(() => { const saved = localStorage.getItem('n8nGameSender_testingMode'); if (saved !== null) isTestingMode.value = saved === 'true'; });
         const currentWebhookUrl = computed(() => isTestingMode.value ? webhookUrls.value.test_upload : webhookUrls.value.prod_upload);
         const currentMigrateWebhookUrl = computed(() => isTestingMode.value ? webhookUrls.value.test_migrate : webhookUrls.value.prod_migrate);
+        const getRequiredWebhookUrl = (key, label) => {
+          const url = webhookUrls.value[key];
+          if (!url) throw new Error(`${label} webhook URL missing. Re-authenticate.`);
+          return url;
+        };
+        const setWebhookUrls = (urls = {}) => {
+          webhookUrls.value = {
+            test_upload: urls.test_upload || "",           // Testing upload workflow
+            prod_upload: urls.prod_upload || "",           // Production upload workflow
+            test_migrate: urls.test_migrate || "",         // Testing migration workflow
+            prod_migrate: urls.prod_migrate || "",         // Production migration workflow
+            pending_cities: urls.pending_cities || "",     // Pending cities list workflow
+            create_city: urls.create_city || "",           // Create city page workflow
+            countries: urls.countries || "",               // Countries list workflow
+            cities: urls.cities || "",                     // Cities list workflow
+            create_country: urls.create_country || ""      // Create country page workflow
+          };
+        };
         const toggleTestingMode = () => { localStorage.setItem('n8nGameSender_testingMode', isTestingMode.value); alert(`Switched to ${isTestingMode.value ? 'Testing' : 'Production'} Mode`); };
         
     const pendingCities = ref([]);
@@ -775,7 +803,7 @@
         const fetchPendingCities = async () => {
           isLoadingCities.value = true;
           try {
-            const res = await fetch("https://openclaw-172725.tailb2094d.ts.net/webhook/929924d9-ed13-47fc-8f0f-7c0998de80a8");
+            const res = await fetch(getRequiredWebhookUrl("pending_cities", "Pending cities"));
             const data = await res.json();
             // n8n response structure contains "rows" array
             if (Array.isArray(data) && data[0] && data[0].rows) {
@@ -787,9 +815,7 @@
           } catch (err) { console.error("Failed to fetch cities:", err); }
           finally { isLoadingCities.value = false; }
         };
-        fetchPendingCities();
 
-                const CREATE_CITY_WEBHOOK_URL = "https://openclaw-172725.tailb2094d.ts.net/webhook/24656a17-fd90-4b5e-bc61-1b846d9d06fa";
         const cityStatus = ref({}); // { [cityId]: 'creating' | 'error' | undefined }
 
         const createCityPage = async (city) => {
@@ -801,7 +827,7 @@
           cityStatus.value[city.id] = "creating";
 
           try {
-            const res = await fetch(CREATE_CITY_WEBHOOK_URL, {
+            const res = await fetch(getRequiredWebhookUrl("create_city", "Create city"), {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
@@ -845,10 +871,6 @@
         const conceptId = ref("");
 
         // Location (Country + City)
-        const COUNTRIES_WEBHOOK_URL = "https://openclaw-172725.tailb2094d.ts.net/webhook/b2ec1ed4-0d98-4b05-aa34-2bd67f8be34c";
-        const CITIES_WEBHOOK_URL = "https://openclaw-172725.tailb2094d.ts.net/webhook/56961ed2-e5c8-4fce-acca-aa8afff28a1e";
-        const CREATE_COUNTRY_WEBHOOK_URL = "https://openclaw-172725.tailb2094d.ts.net/webhook/20cf54f8-1cca-4a68-9c8f-f6f1730524d4";
-
         const countries = ref([]);
         const cities = ref([]);
         const isLoadingCountries = ref(false);
@@ -895,7 +917,7 @@
         const fetchCountries = async () => {
           isLoadingCountries.value = true;
           try {
-            const res = await fetch(COUNTRIES_WEBHOOK_URL);
+            const res = await fetch(getRequiredWebhookUrl("countries", "Countries"));
             const data = await res.json();
             const list = data?.[0]?.data?.countries || [];
             countries.value = Array.isArray(list) ? list : [];
@@ -918,7 +940,7 @@
 
           creatingCustomCountry.value = true;
           try {
-            const res = await fetch(CREATE_COUNTRY_WEBHOOK_URL, {
+            const res = await fetch(getRequiredWebhookUrl("create_country", "Create country"), {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
@@ -960,7 +982,8 @@
           try {
             // Prefer POST (send slug in body). If the webhook is configured for GET,
             // we fall back to query string.
-            let res = await fetch(CITIES_WEBHOOK_URL, {
+            const citiesWebhookUrl = getRequiredWebhookUrl("cities", "Cities");
+            let res = await fetch(citiesWebhookUrl, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
@@ -971,7 +994,7 @@
 
             if (!res.ok) {
               res = await fetch(
-                `${CITIES_WEBHOOK_URL}?countrySlug=${encodeURIComponent(countrySlug)}`
+                `${citiesWebhookUrl}?countrySlug=${encodeURIComponent(countrySlug)}`
               );
             }
 
@@ -1002,7 +1025,7 @@
 
           creatingCustomCity.value = true;
           try {
-            const res = await fetch(CREATE_CITY_WEBHOOK_URL, {
+            const res = await fetch(getRequiredWebhookUrl("create_city", "Create city"), {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
@@ -1037,8 +1060,6 @@
             creatingCustomCity.value = false;
           }
         };
-
-                fetchCountries();
 
         const isSubmitting = ref(false);
         const statusMessage = ref("");
@@ -1239,7 +1260,7 @@
           }
         };
         
-        // Auth (unchanged)
+        // Auth
         const checkPassword = async () => {
           authError.value = "";
           if (!passwordInput.value) { authError.value = "Enter password."; return; }
@@ -1253,13 +1274,18 @@
               const data = await res.json();
               if (data.valid === true) {
                 isValid = true;
-                if (data.urls) webhookUrls.value = { test_upload: data.urls.test_upload || "", prod_upload: data.urls.prod_upload || "", test_migrate: data.urls.test_migrate || "", prod_migrate: data.urls.prod_migrate || "" };
+                if (data.urls) setWebhookUrls(data.urls);
               }
             } else {
               const text = await res.text();
               if (text.trim() === "1") isValid = true;
             }
-            if (isValid) { isAuthed.value = true; passwordInput.value = ""; authError.value = ""; }
+            if (isValid) {
+              isAuthed.value = true;
+              passwordInput.value = "";
+              authError.value = "";
+              await Promise.allSettled([fetchPendingCities(), fetchCountries()]);
+            }
             else authError.value = "Incorrect password.";
           } catch (err) { authError.value = "Error contacting server."; } finally { authLoading.value = false; }
         };
